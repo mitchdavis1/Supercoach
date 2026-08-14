@@ -12,18 +12,18 @@ language plpgsql
 as $$
 declare
   chars text := 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; -- no 0/O/1/I ambiguity
-  code text;
+  v_code text;
   exists_already boolean;
 begin
   loop
-    code := '';
+    v_code := '';
     for i in 1..6 loop
-      code := code || substr(chars, floor(random() * length(chars) + 1)::int, 1);
+      v_code := v_code || substr(chars, floor(random() * length(chars) + 1)::int, 1);
     end loop;
-    select exists(select 1 from public.leagues l where l.code = code) into exists_already;
+    select exists(select 1 from public.leagues l where l.code = v_code) into exists_already;
     exit when not exists_already;
   end loop;
-  return code;
+  return v_code;
 end;
 $$;
 
