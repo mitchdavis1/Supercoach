@@ -1,0 +1,3102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spring Racing Carnival SuperStable — Fantasy Horse Racing Game</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&display=swap');
+
+  /* ── STABLE TRANSFER PAGE ── */
+  .transfer-outer { height: calc(100vh - 114px); overflow-y: auto; background: #FFF5FA; }
+  .transfer-container { max-width: 1080px; margin: 0 auto; padding: 24px 24px 60px; }
+
+  .transfer-hero {
+    background: linear-gradient(135deg, #1A1F5E, #2D3480);
+    border-radius: 12px; padding: 20px 28px; margin-bottom: 20px;
+    display: flex; align-items: center; gap: 20px; color: #fff;
+    border: 2px solid #E8007D;
+  }
+  .transfer-hero-icon { font-size: 36px; flex-shrink: 0; }
+  .transfer-hero-title { font-family: 'Anton', Impact, sans-serif; font-size: 26px; color: #fff; line-height: 1; }
+  .transfer-hero-sub { font-size: 12px; color: #aab0e8; margin-top: 5px; }
+  .transfer-hero-right { margin-left: auto; text-align: right; flex-shrink: 0; }
+  .transfer-allowance { font-family: 'Anton', Impact, sans-serif; font-size: 42px; color: #E8007D; line-height: 1; }
+  .transfer-allowance-label { font-size: 10px; color: #aab0e8; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700; }
+  .transfer-allowance.used { color: #ff6b6b; }
+
+  .transfer-week-bar {
+    background: #fff; border: 1.5px solid #FFD6EC; border-radius: 10px;
+    padding: 14px 18px; margin-bottom: 18px;
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  }
+  .week-pill { background: #1A1F5E; color: #FFD6EC; font-size: 10px; font-weight: 800; padding: 4px 12px; border-radius: 6px; text-transform: uppercase; letter-spacing: 1px; flex-shrink: 0; }
+  .week-deadline { font-size: 12px; color: #7080b0; }
+  .week-deadline strong { color: #E8007D; }
+  .week-status { margin-left: auto; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .week-status-dot { width: 8px; height: 8px; border-radius: 50%; background: #2a9a50; flex-shrink: 0; }
+  .week-status-dot.closed { background: #cc3344; }
+  .week-status-text { font-size: 12px; font-weight: 700; color: #2a9a50; }
+  .week-status-text.closed { color: #cc3344; }
+
+  .transfer-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+
+  .transfer-panel { background: #fff; border: 1.5px solid #FFD6EC; border-radius: 12px; overflow: hidden; }
+  .transfer-panel-header {
+    background: #1A1F5E; color: #fff; padding: 12px 18px;
+    font-size: 13px; font-weight: 800; display: flex; align-items: center; gap: 10px;
+  }
+  .transfer-panel-header.out { background: #cc3344; }
+  .transfer-panel-header.in  { background: #2a7a50; }
+  .transfer-panel-body { padding: 14px; }
+
+  .current-stable-list { display: flex; flex-direction: column; gap: 7px; }
+
+  .stable-player-row {
+    background: #FFF5FA; border: 1.5px solid #FFD6EC; border-radius: 8px;
+    padding: 9px 12px; display: flex; align-items: center; gap: 10px;
+    cursor: pointer; transition: all 0.18s;
+  }
+  .stable-player-row:hover { border-color: #cc3344; background: #fff5f5; }
+  .stable-player-row.selecting-out { border-color: #cc3344; border-width: 2px; background: #fff0f0; }
+  .stable-player-row.locked { opacity: 0.45; cursor: not-allowed; }
+  .stable-player-row.locked:hover { border-color: #FFD6EC; background: #FFF5FA; }
+
+  .spr-avatar { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+  .spr-avatar.horse   { background: linear-gradient(135deg, #E8007D, #C4006A); }
+  .spr-avatar.jockey  { background: linear-gradient(135deg, #1A1F5E, #2D3480); }
+  .spr-avatar.trainer { background: linear-gradient(135deg, #2D3480, #5560cc); }
+
+  .spr-info { flex: 1; min-width: 0; }
+  .spr-name { font-size: 12px; font-weight: 700; color: #1A1F5E; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .spr-meta { font-size: 10px; color: #7080b0; }
+  .spr-price { font-size: 12px; font-weight: 800; color: #E8007D; flex-shrink: 0; }
+
+  .out-badge { background: #cc3344; color: #fff; font-size: 8px; font-weight: 900; padding: 2px 6px; border-radius: 3px; text-transform: uppercase; flex-shrink: 0; }
+  .captain-lock { background: #1A1F5E; color: #FFD6EC; font-size: 8px; font-weight: 900; padding: 2px 6px; border-radius: 3px; text-transform: uppercase; flex-shrink: 0; }
+  .set-captain-btn { background: transparent; border: 1.5px solid #c0c8ff; color: #6070cc; font-size: 9px; font-weight: 800; padding: 2px 7px; border-radius: 4px; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; font-family: inherit; transition: all 0.2s; flex-shrink: 0; }
+  .set-captain-btn { display:none; } /* replaced by drag-drop */
+  .set-vc-btn      { display:none; } /* replaced by drag-drop */
+  .active-to-bench-btn { background: transparent; border: 1.5px solid #b0a0d0; color: #8070b0; font-size: 9px; font-weight: 800; padding: 2px 7px; border-radius: 4px; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; font-family: inherit; transition: all 0.2s; flex-shrink: 0; }
+  .active-to-bench-btn:hover { background: #8070b0; border-color: #8070b0; color: #fff; }
+  .active-to-bench-btn.pending { background: #1A1F5E; border-color: #1A1F5E; color: #FFD6EC; }
+  .team-slot.swap-target { border-color: #1A1F5E !important; border-width: 2px !important; background: #EEF0FF !important; cursor: pointer; }
+  .team-slot.swap-target:hover { background: #E0E4FF !important; }
+  .player-card[draggable="true"] { cursor: grab; }
+  .player-card[draggable="true"]:active { cursor: grabbing; }
+  .team-slot[draggable="true"] { cursor: grab; }
+  .team-slot[draggable="true"]:active { cursor: grabbing; }
+  .team-slot.drag-over { outline: 2px dashed #E8007D; outline-offset: 2px; background: #FFF0F8 !important; }
+  .team-slot.captain { border-color: #C9A227 !important; border-width: 2px !important; background: #FFFBEF !important; }
+  .team-slot.vc      { border-color: #9090a0 !important; border-width: 2px !important; background: #F6F6F8 !important; }
+  .slot-role-label { font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; width: 22px; text-align: center; flex-shrink: 0; }
+  .slot-role-label.cap  { color: #C9A227; }
+  .slot-role-label.vc   { color: #9090a0; }
+  .slot-role-label.open { color: #d0c8e0; }
+  .vc-badge { background: #2D3480; color: #fff; font-size: 8px; font-weight: 900; padding: 1px 5px; border-radius: 3px; text-transform: uppercase; letter-spacing: 0.5px; margin-left: 4px; }
+  .team-slot.vc { border-color: #2D3480 !important; border-width: 2px !important; background: #F0F4FF !important; }
+  .team-slot.bench-slot { border-color: #c0b8d8; background: #F8F6FF; }
+  .team-slot.bench-slot.filled { border-color: #9080c0; background: #F0ECF8; }
+  .bench-to-active-btn { background: transparent; border: 1.5px solid #9080c0; color: #7060a0; font-size: 9px; font-weight: 800; padding: 2px 7px; border-radius: 4px; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; font-family: inherit; transition: all 0.2s; flex-shrink: 0; }
+  .bench-to-active-btn:hover { background: #7060a0; border-color: #7060a0; color: #fff; }
+  .bench-to-active-btn.swap-ready { background: #1A1F5E; border-color: #1A1F5E; color: #FFD6EC; }
+  .bench-to-active-btn.swap-ready:hover { background: #2D3480; border-color: #2D3480; }
+  .save-stable-btn {
+    width: calc(100% - 32px); margin: 12px 16px 16px;
+    background: linear-gradient(135deg, #E8007D, #C4006A);
+    color: #fff; border: none; border-radius: 8px;
+    padding: 13px; font-size: 13px; font-weight: 800;
+    cursor: pointer; text-transform: uppercase; letter-spacing: 1px;
+    font-family: inherit; transition: all 0.2s;
+  }
+  .save-stable-btn:hover { background: linear-gradient(135deg, #1A1F5E, #2D3480); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(232,0,125,0.3); }
+  .save-stable-btn.saved { background: linear-gradient(135deg, #2a7a50, #1a5a38); cursor: default; transform: none; box-shadow: none; }
+  .save-stable-btn:disabled { background: #e0c0d0; color: #a08090; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  /* Replacement search */
+  .replacement-search { background: #FFF5FA; border: 2px solid #FFD6EC; border-radius: 8px; padding: 9px 12px; width: 100%; color: #1A1F5E; font-size: 12px; outline: none; margin-bottom: 10px; font-family: inherit; }
+  .replacement-search:focus { border-color: #E8007D; background: #fff; }
+  .replacement-search::placeholder { color: #d0a0c0; }
+
+  .replacement-list { display: flex; flex-direction: column; gap: 6px; max-height: 420px; overflow-y: auto; }
+  .replacement-row {
+    background: #FFF5FA; border: 1.5px solid #FFD6EC; border-radius: 8px;
+    padding: 9px 12px; display: flex; align-items: center; gap: 10px;
+    cursor: pointer; transition: all 0.18s;
+  }
+  .replacement-row:hover { border-color: #2a7a50; background: #f0fff8; }
+  .replacement-row.selecting-in { border-color: #2a7a50; border-width: 2px; background: #e8fff2; }
+  .replacement-row.cant { opacity: 0.4; cursor: not-allowed; }
+  .replacement-row.cant:hover { border-color: #FFD6EC; background: #FFF5FA; }
+  .in-badge { background: #2a7a50; color: #fff; font-size: 8px; font-weight: 900; padding: 2px 6px; border-radius: 3px; text-transform: uppercase; flex-shrink: 0; }
+
+  /* Confirm strip */
+  .transfer-confirm-strip {
+    background: #fff; border: 2px solid #E8007D; border-radius: 10px;
+    padding: 14px 18px; margin-top: 18px;
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  }
+  .confirm-arrow { font-size: 24px; color: #E8007D; flex-shrink: 0; }
+  .confirm-players { display: flex; align-items: center; gap: 12px; flex: 1; flex-wrap: wrap; min-width: 0; }
+  .confirm-chip {
+    display: flex; align-items: center; gap: 7px; background: #FFF5FA;
+    border: 1.5px solid #FFD6EC; border-radius: 7px; padding: 6px 12px;
+    font-size: 12px; font-weight: 700; color: #1A1F5E; flex-shrink: 0;
+  }
+  .confirm-chip.out { border-color: #cc3344; background: #fff0f0; color: #cc3344; }
+  .confirm-chip.in  { border-color: #2a7a50; background: #e8fff2; color: #2a7a50; }
+  .confirm-btn {
+    background: linear-gradient(135deg, #E8007D, #C4006A); color: #fff;
+    border: none; border-radius: 8px; padding: 11px 24px; font-size: 13px;
+    font-weight: 800; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px;
+    font-family: inherit; transition: all 0.2s; flex-shrink: 0;
+  }
+  .confirm-btn:hover { background: linear-gradient(135deg, #1A1F5E, #2D3480); transform: translateY(-1px); }
+  .confirm-btn:disabled { background: #e0c0d0; color: #a08090; cursor: not-allowed; transform: none; }
+  .confirm-budget-note { font-size: 11px; color: #7080b0; flex-shrink: 0; }
+  .confirm-budget-note.over { color: #cc3344; font-weight: 700; }
+
+  /* Transfer log */
+  .transfer-log { margin-top: 20px; }
+  .transfer-log-title { font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: #E8007D; font-weight: 700; margin-bottom: 10px; }
+  .log-row {
+    background: #fff; border: 1px solid #FFD6EC; border-radius: 8px;
+    padding: 10px 14px; margin-bottom: 7px;
+    display: flex; align-items: center; gap: 12px; font-size: 12px;
+  }
+  .log-week { background: #1A1F5E; color: #FFD6EC; font-size: 9px; font-weight: 800; padding: 2px 8px; border-radius: 4px; flex-shrink: 0; }
+  .log-out { color: #cc3344; font-weight: 700; }
+  .log-in  { color: #2a7a50; font-weight: 700; }
+  .log-arrow { color: #E8007D; font-weight: 900; }
+  .log-date { margin-left: auto; font-size: 10px; color: #aab0e8; flex-shrink: 0; }
+
+  /* Empty state */
+  .transfer-empty {
+    text-align: center; padding: 40px 20px; color: #c070a0; font-size: 13px;
+  }
+  .transfer-empty-icon { font-size: 36px; margin-bottom: 10px; }
+
+  /* Locked-season banner */
+  .transfer-locked-banner {
+    background: #1A1F5E; color: #FFD6EC; border-radius: 8px;
+    padding: 12px 18px; margin-bottom: 16px; font-size: 12px;
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #FFF5FA; color: #1A1F5E; min-height: 100vh; font-family: 'Inter', 'Segoe UI', sans-serif; }
+
+  /* ── HEADER ── */
+  .header {
+    background: linear-gradient(135deg, #E8007D 0%, #C4006A 100%);
+    border-bottom: 4px solid #1A1F5E;
+    padding: 0 24px;
+    display: flex; align-items: stretch; justify-content: space-between; gap: 16px;
+    min-height: 70px;
+  }
+  .logo-wrap { display: flex; align-items: center; gap: 14px; padding: 12px 0; }
+  .logo-emblem {
+    width: 50px; height: 50px; border-radius: 50%;
+    background: #1A1F5E;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; flex-shrink: 0; box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+  }
+  .logo-title { font-family: 'Anton', Impact, sans-serif; font-size: 26px; color: #FFFFFF; letter-spacing: 1px; line-height: 1; text-transform: uppercase; }
+  .logo-sub { font-size: 10px; color: #FFD6EC; letter-spacing: 3px; text-transform: uppercase; margin-top: 4px; font-weight: 600; }
+
+  .header-centre { display: flex; align-items: center; gap: 8px; }
+
+  /* ── ROUND BAR ── */
+  .round-bar { background: #1A1F5E; padding: 8px 24px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .round-badge { background: #E8007D; color: #fff; font-weight: 800; font-size: 10px; padding: 3px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 1px; }
+  .round-detail { color: #aab0e8; font-size: 11px; }
+  .round-venue { color: #FFD6EC; font-size: 11px; font-weight: 700; }
+  .round-spacer { flex: 1; }
+  .deadline { font-size: 11px; color: #aab0e8; display: flex; align-items: center; gap: 5px; }
+  .deadline strong { color: #FFD6EC; }
+
+  /* ── MAIN ── */
+  .main { display: flex; height: calc(100vh - 114px); }
+
+  /* ── TEAM PANEL ── */
+  .team-panel { width: 310px; min-width: 310px; background: #fff; border-right: 2px solid #FFD6EC; overflow-y: auto; padding: 16px; }
+  .panel-title { font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: #E8007D; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; font-weight: 700; }
+  .slot-count { background: #E8007D; color: #fff; font-weight: 800; font-size: 12px; padding: 2px 8px; border-radius: 10px; }
+  .section-header { font-size: 9px; text-transform: uppercase; letter-spacing: 2px; color: #1A1F5E; margin: 14px 0 7px; padding-bottom: 5px; border-bottom: 2px solid #E8007D; font-weight: 800; }
+
+  .team-slot { background: #FFF5FA; border: 1px dashed #f0a0cc; border-radius: 8px; padding: 8px 10px; margin-bottom: 5px; display: flex; align-items: center; gap: 9px; cursor: pointer; transition: all 0.2s; min-height: 50px; }
+  .team-slot.filled { border: 1.5px solid #E8007D; background: #FFF0F8; }
+  .team-slot.filled:hover { border-color: #1A1F5E; }
+  .team-slot.captain { border-color: #1A1F5E !important; border-width: 2px !important; background: #EEF0FF !important; }
+
+  .slot-avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+  .slot-avatar.empty { background: #FFD6EC; color: #E8007D; font-size: 16px; }
+  .slot-avatar.horse { background: linear-gradient(135deg, #E8007D, #C4006A); }
+  .slot-avatar.jockey { background: linear-gradient(135deg, #1A1F5E, #2D3480); }
+  .slot-avatar.trainer { background: linear-gradient(135deg, #2D3480, #4a50aa); }
+
+  .slot-info { flex: 1; min-width: 0; }
+  .slot-name { font-size: 12px; font-weight: 700; color: #1A1F5E; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .slot-meta { font-size: 10px; color: #E8007D; }
+  .slot-empty-text { font-size: 11px; color: #c070a0; }
+  .captain-badge { background: #1A1F5E; color: #fff; font-size: 8px; font-weight: 900; padding: 1px 5px; border-radius: 3px; text-transform: uppercase; letter-spacing: 0.5px; margin-left: 4px; }
+  .remove-btn { color: #f0a0cc; font-size: 14px; cursor: pointer; padding: 3px 6px; border-radius: 4px; transition: all 0.2s; flex-shrink: 0; }
+  .remove-btn:hover { color: #E8007D; background: #FFD6EC; }
+
+  .score-card { background: linear-gradient(135deg, #1A1F5E, #2D3480); border-radius: 10px; padding: 14px; margin-top: 14px; text-align: center; border: 2px solid #E8007D; }
+  .score-label { font-size: 9px; color: #FFD6EC; text-transform: uppercase; letter-spacing: 2px; font-weight: 700; }
+  .score-value { font-family: 'Anton', Impact, sans-serif; font-size: 36px; color: #fff; line-height: 1.1; }
+  .score-sub { font-size: 10px; color: #aab0e8; margin-top: 4px; }
+  .score-breakdown { display: flex; justify-content: space-around; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.15); }
+  .score-item-val { font-size: 14px; font-weight: 800; color: #FFD6EC; }
+  .score-item-label { font-size: 9px; color: #aab0e8; text-transform: uppercase; letter-spacing: 1px; }
+
+  /* ── POOL PANEL ── */
+  .pool-panel { flex: 1; overflow-y: auto; padding: 16px; background: #FFF5FA; }
+
+  .tab-bar { display: flex; gap: 4px; margin-bottom: 14px; background: #1A1F5E; border-radius: 10px; padding: 4px; }
+  .tab { flex: 1; padding: 9px; text-align: center; border-radius: 7px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; color: #aab0e8; text-transform: uppercase; letter-spacing: 0.5px; }
+  .tab.active { background: #E8007D; color: #fff; }
+  .tab:not(.active):hover { background: rgba(232,0,125,0.2); color: #FFD6EC; }
+
+  .search-bar { background: #fff; border: 2px solid #FFD6EC; border-radius: 8px; padding: 10px 14px; width: 100%; color: #1A1F5E; font-size: 13px; outline: none; margin-bottom: 10px; font-family: inherit; }
+  .search-bar::placeholder { color: #d0a0c0; }
+  .search-bar:focus { border-color: #E8007D; box-shadow: 0 0 0 3px rgba(232,0,125,0.1); }
+
+  .sort-row { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+  .sort-btn { background: #fff; border: 1.5px solid #FFD6EC; color: #1A1F5E; font-size: 10px; padding: 5px 12px; border-radius: 6px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; transition: all 0.2s; font-family: inherit; font-weight: 600; }
+  .sort-btn.active { background: #E8007D; border-color: #E8007D; color: #fff; font-weight: 700; }
+  .sort-btn:hover:not(.active) { border-color: #E8007D; color: #E8007D; }
+
+  /* ── PLAYER CARDS ── */
+  .player-grid { display: flex; flex-direction: column; gap: 7px; }
+
+  .player-card { background: #fff; border: 1.5px solid #FFD6EC; border-radius: 10px; padding: 11px 14px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: all 0.18s; }
+  .player-card:hover { border-color: #E8007D; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(232,0,125,0.15); }
+  .player-card.selected { border-color: #1A1F5E; border-width: 2px; background: #EEF0FF; box-shadow: 0 0 0 3px rgba(26,31,94,0.1); }
+  .player-card.cant-add { opacity: 0.4; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+
+  .player-rank { width: 22px; text-align: center; font-size: 11px; color: #c070a0; font-weight: 700; flex-shrink: 0; }
+
+  .player-avatar { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; border: 2px solid transparent; }
+  .player-avatar.horse   { background: linear-gradient(135deg, #E8007D, #C4006A); border-color: #f060a0; }
+  .player-avatar.jockey  { background: linear-gradient(135deg, #1A1F5E, #2D3480); border-color: #4a50aa; }
+  .player-avatar.trainer { background: linear-gradient(135deg, #2D3480, #5560cc); border-color: #6070dd; }
+  .player-card.selected .player-avatar { border-color: #fff; box-shadow: 0 0 0 2px #1A1F5E; }
+
+  .player-info { flex: 1; min-width: 0; }
+  .player-name { font-size: 14px; font-weight: 700; color: #1A1F5E; }
+  .player-earnings { font-size: 12px; font-weight: 700; color: #2a9a50; margin-top: 1px; }
+  .player-meta { font-size: 11px; color: #7080b0; margin-top: 1px; }
+  .player-tags { display: flex; gap: 4px; margin-top: 5px; flex-wrap: wrap; }
+
+  .tag { font-size: 9px; padding: 2px 7px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
+  .tag.gr1   { background: #1A1F5E; color: #FFD6EC; border: 1px solid #2D3480; }
+  .tag.form  { background: #FFF0F8; color: #E8007D; border: 1px solid #FFD6EC; }
+  .tag.cup   { background: #1a3a10; color: #7aee7a; border: 1px solid #2a6a20; }
+  .tag.wet   { background: #EEF8FF; color: #2060a0; border: 1px solid #b0d8ff; }
+  .tag.hot   { background: #FFF0F8; color: #E8007D; border: 1px solid #E8007D; }
+  .tag.mare  { background: #f8eeff; color: #8040b0; border: 1px solid #d0b0f0; }
+
+  .player-stats { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex-shrink: 0; }
+  .player-price { font-size: 16px; font-weight: 800; color: #E8007D; font-variant-numeric: tabular-nums; }
+  .player-avg { font-size: 10px; color: #7080b0; background: #FFF5FA; padding: 2px 7px; border-radius: 4px; border: 1px solid #FFD6EC; font-weight: 600; }
+
+  .add-btn { background: #E8007D; color: #fff; border: none; border-radius: 6px; font-size: 10px; font-weight: 800; padding: 6px 14px; cursor: pointer; transition: all 0.2s; text-transform: uppercase; letter-spacing: 0.5px; font-family: inherit; }
+  .add-btn:hover { background: #1A1F5E; transform: scale(1.04); }
+  .add-btn.added { background: #2D3480; color: #FFD6EC; cursor: default; transform: none; }
+  .add-btn.cant  { background: #e0c0d0; color: #a08090; cursor: not-allowed; transform: none; }
+
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: #FFF5FA; }
+  ::-webkit-scrollbar-thumb { background: #FFD6EC; border-radius: 3px; }
+
+  .info-banner { background: #EEF0FF; border: 1px solid #c0c8ff; border-radius: 8px; padding: 10px 14px; margin-bottom: 14px; font-size: 11px; color: #2D3480; display: flex; gap: 8px; align-items: flex-start; }
+  .info-banner strong { color: #1A1F5E; }
+
+  /* ── FUTURES ODDS CHIPS ── */
+  .futures-row { display: flex; gap: 5px; margin-top: 5px; flex-wrap: wrap; }
+  .futures-chip {
+    display: inline-flex; align-items: center; gap: 0;
+    border-radius: 5px; overflow: hidden; font-size: 9px; font-weight: 700;
+    border: 1px solid #1A1F5E; flex-shrink: 0;
+  }
+  .futures-race { background: #1A1F5E; color: #FFD6EC; padding: 2px 6px; letter-spacing: 0.3px; }
+  .futures-odds { background: #E8007D; color: #fff; padding: 2px 6px; letter-spacing: 0.5px; }
+
+  /* ── DATA FRESHNESS BADGE ── */
+  .data-badge { background: #1a3a10; color: #7aee7a; border: 1px solid #2a6a20; font-size: 9px; font-weight: 700; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; margin-left: 8px; }
+
+  .branding-strip { position: fixed; bottom: 0; right: 0; background: #1A1F5E; border-top: 2px solid #E8007D; border-left: 2px solid #E8007D; padding: 4px 14px; font-size: 9px; color: #aab0e8; letter-spacing: 1px; text-transform: uppercase; border-top-left-radius: 8px; }
+  .branding-strip span { color: #FFD6EC; font-weight: 700; }
+
+  /* ── IN PLAY PAGE ── */
+  .inplay-container { max-width: 960px; margin: 0 auto; padding: 24px 24px 60px; }
+  .inplay-hero {
+    background: linear-gradient(135deg, #1A1F5E, #2D3480);
+    border-radius: 12px; padding: 20px 24px; margin-bottom: 20px;
+    display: flex; align-items: center; gap: 20px;
+    border: 2px solid #E8007D;
+  }
+  .inplay-hero-dot { width: 12px; height: 12px; border-radius: 50%; background: #2aee6a; box-shadow: 0 0 8px #2aee6a; flex-shrink: 0; animation: pulse-dot 1.5s ease-in-out infinite; }
+  @keyframes pulse-dot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.6;transform:scale(1.3)} }
+  .inplay-hero-info { flex: 1; }
+  .inplay-hero-label { font-size: 10px; color: #aab0e8; text-transform: uppercase; letter-spacing: 2px; font-weight: 700; }
+  .inplay-hero-title { font-family: 'Anton', Impact, sans-serif; font-size: 22px; color: #fff; margin-top: 2px; }
+  .inplay-hero-sub { font-size: 12px; color: #FFD6EC; margin-top: 3px; }
+  .inplay-hero-score { text-align: right; flex-shrink: 0; }
+  .inplay-hero-pts { font-family: 'Anton', Impact, sans-serif; font-size: 34px; color: #fff; line-height: 1; }
+  .inplay-hero-pts-label { font-size: 11px; color: #aab0e8; }
+
+  .inplay-week-banner {
+    background: #E8007D; border-radius: 10px; padding: 12px 18px;
+    display: flex; align-items: center; gap: 14px; margin-bottom: 20px;
+  }
+  .inplay-week-badge { background: #fff; color: #E8007D; font-size: 10px; font-weight: 900; padding: 3px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 1px; flex-shrink: 0; }
+  .inplay-week-name { font-size: 14px; font-weight: 800; color: #fff; }
+  .inplay-week-date { font-size: 11px; color: #FFD6EC; margin-top: 1px; }
+  .inplay-week-spacer { flex: 1; }
+  .inplay-deadline { font-size: 11px; color: #FFD6EC; display: flex; align-items: center; gap: 5px; }
+  .inplay-deadline strong { color: #fff; }
+
+  .inplay-section-header { font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: #E8007D; font-weight: 800; margin: 20px 0 10px; padding-bottom: 6px; border-bottom: 2px solid #FFD6EC; display: flex; justify-content: space-between; align-items: center; }
+  .inplay-section-count { background: #E8007D; color: #fff; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 10px; }
+
+  .inplay-grid { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+
+  .inplay-card {
+    background: #fff; border: 1.5px solid #FFD6EC; border-radius: 10px;
+    padding: 14px 16px; display: grid;
+    grid-template-columns: 44px 1fr 140px 70px 110px;
+    align-items: center; gap: 12px;
+  }
+  .inplay-card.racing { border-color: #E8007D; border-width: 2px; }
+  .inplay-card.captain-card { border-color: #C9A227; border-width: 2px; background: #FFFBEF; }
+  .inplay-card.na-card { opacity: 0.6; }
+
+  .inplay-avatar { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #E8007D, #C4006A); display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+  .inplay-avatar.na { background: linear-gradient(135deg, #c0b0c8, #a090b0); }
+  .inplay-avatar.bench-av { background: linear-gradient(135deg, #9080b0, #7060a0); }
+
+  .inplay-horse-name { font-size: 14px; font-weight: 800; color: #1A1F5E; }
+  .inplay-horse-meta { font-size: 11px; color: #7080b0; margin-top: 2px; }
+  .inplay-cap-badge { display: inline-block; background: #C9A227; color: #fff; font-size: 8px; font-weight: 900; padding: 1px 5px; border-radius: 3px; text-transform: uppercase; margin-left: 5px; vertical-align: middle; }
+  .inplay-vc-badge  { display: inline-block; background: #9090a0; color: #fff; font-size: 8px; font-weight: 900; padding: 1px 5px; border-radius: 3px; text-transform: uppercase; margin-left: 5px; vertical-align: middle; }
+
+  .inplay-race-col { }
+  .inplay-race-name { font-size: 12px; font-weight: 700; color: #1A1F5E; }
+  .inplay-race-prize { font-size: 11px; color: #2a9a50; font-weight: 700; margin-top: 2px; }
+  .inplay-race-na { font-size: 12px; color: #b0a0c0; font-style: italic; }
+
+  .inplay-jockey-col { font-size: 12px; color: #1A1F5E; font-weight: 600; }
+  .inplay-jockey-my { color: #E8007D; font-weight: 800; }
+  .inplay-jockey-note { font-size: 10px; color: #E8007D; font-weight: 700; margin-top: 2px; }
+
+  .inplay-odds-col { text-align: right; }
+  .inplay-odds { font-size: 16px; font-weight: 800; color: #1A1F5E; }
+  .inplay-odds.fav { color: #E8007D; }
+  .inplay-odds-label { font-size: 9px; color: #9080b0; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 1px; }
+  .inplay-odds-na { font-size: 12px; color: #b0a0c0; font-style: italic; text-align: right; }
+  .betslip-btn { background: #1A1F5E; color: #FFD6EC; border: none; border-radius: 6px; font-size: 10px; font-weight: 800; padding: 7px 10px; cursor: pointer; font-family: inherit; text-transform: uppercase; letter-spacing: 0.5px; transition: all 0.2s; text-align: center; white-space: nowrap; }
+  .betslip-btn:hover { background: #E8007D; color: #fff; transform: scale(1.04); }
+  .betslip-btn.na { background: #e8e0f0; color: #b0a0c0; cursor: not-allowed; transform: none; }
+  .multi-btn { background: linear-gradient(135deg, #E8007D, #C4006A); color: #fff; border: none; border-radius: 8px; padding: 9px 14px; cursor: pointer; font-family: inherit; transition: all 0.2s; display: flex; align-items: center; justify-content: space-between; width: 100%; margin-top: 10px; }
+  .multi-btn:hover { background: linear-gradient(135deg, #1A1F5E, #2D3480); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(232,0,125,0.3); }
+  .multi-btn-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+  .multi-btn-odds { font-family: 'Anton', Impact, sans-serif; font-size: 18px; line-height: 1; }
+  .multi-btn-sub { font-size: 9px; opacity: 0.8; margin-top: 2px; }
+
+  .inplay-score-col { text-align: right; }
+  .inplay-earned { font-size: 15px; font-weight: 800; color: #2a9a50; }
+  .inplay-earned.zero { color: #b0a0c0; }
+  .inplay-earned-label { font-size: 9px; color: #9080b0; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .inplay-jockey-card {
+    background: #fff; border: 1.5px solid #FFD6EC; border-radius: 10px;
+    padding: 14px 16px; display: grid;
+    grid-template-columns: 44px 1fr;
+    align-items: start; gap: 14px;
+  }
+  .inplay-jockey-avatar { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #1A1F5E, #2D3480); display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+
+  .inplay-no-stable { text-align: center; padding: 60px 20px; color: #c070a0; }
+  .inplay-no-stable-icon { font-size: 48px; margin-bottom: 16px; }
+  .inplay-no-stable-title { font-family: 'Anton', Impact, sans-serif; font-size: 22px; color: #1A1F5E; margin-bottom: 8px; }
+  .inplay-no-stable-sub { font-size: 13px; color: #9080b0; }
+
+  /* ── TOP NAV ── */
+  .top-nav {
+    background: #fff;
+    border-bottom: 2px solid #FFD6EC;
+    display: flex; align-items: center; gap: 0; padding: 0 24px;
+    overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch;
+  }
+  .top-nav-tab {
+    padding: 13px 24px; font-size: 13px; font-weight: 700; cursor: pointer;
+    border-bottom: 3px solid transparent; transition: all 0.2s; color: #7080b0;
+    text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .top-nav-tab.active { color: #E8007D; border-bottom-color: #E8007D; }
+  .top-nav-tab:hover:not(.active) { color: #1A1F5E; border-bottom-color: #FFD6EC; }
+
+  /* ── PAGES ── */
+  .page { display: none; }
+  .page.active { display: flex; flex-direction: column; }
+  #page-myteam.active { height: calc(100vh - 114px); }
+  #page-leaderboard.active, #page-joinleague.active, #page-rules.active, #page-transfer.active, #page-inplay.active, #page-dataimport.active { display: block; height: calc(100vh - 114px); overflow-y: auto; }
+
+  /* ── BUDGET BAR (My Team only) ── */
+  .budget-bar-row {
+    background: #1A1F5E;
+    padding: 10px 24px 8px;
+    display: flex; align-items: center; gap: 20px;
+    flex-shrink: 0;
+  }
+  .budget-bar-inner { display: flex; align-items: baseline; gap: 10px; flex-shrink: 0; }
+  .budget-bar-label { font-size: 9px; color: #aab0e8; text-transform: uppercase; letter-spacing: 2px; font-weight: 700; }
+  .budget-bar-amount { font-size: 20px; font-weight: 800; color: #fff; font-variant-numeric: tabular-nums; }
+  .budget-bar-of { font-size: 10px; color: #7080b0; }
+  .budget-bar-track { flex: 1; height: 6px; background: rgba(255,255,255,0.15); border-radius: 3px; }
+  .budget-bar-fill { height: 100%; background: linear-gradient(90deg, #FFD6EC, #E8007D); border-radius: 3px; transition: width 0.4s; }
+  .budget-bar-fill.danger { background: linear-gradient(90deg, #ff6b6b, #ff4444); }
+
+  /* ── TEAM + POOL WRAPPER ── */
+  .team-and-pool { display: flex; flex: 1; min-height: 0; }
+
+  /* ── LEADERBOARD ── */
+  .lb-container { max-width: 960px; margin: 0 auto; padding: 24px; }
+
+  .lb-hero {
+    background: linear-gradient(135deg, #E8007D, #C4006A);
+    border-radius: 12px; padding: 20px 24px; margin-bottom: 20px;
+    display: flex; align-items: center; gap: 20px; color: #fff;
+  }
+  .lb-hero-rank { font-family: 'Anton', Impact, sans-serif; font-size: 52px; color: #fff; line-height: 1; min-width: 60px; }
+  .lb-hero-info { flex: 1; }
+  .lb-hero-label { font-size: 10px; color: #FFD6EC; text-transform: uppercase; letter-spacing: 2px; font-weight: 700; }
+  .lb-hero-name { font-family: 'Anton', Impact, sans-serif; font-size: 26px; color: #fff; }
+  .lb-hero-sub { font-size: 12px; color: #FFD6EC; margin-top: 4px; }
+  .lb-hero-score { text-align: right; }
+  .lb-hero-pts { font-family: 'Anton', Impact, sans-serif; font-size: 38px; color: #fff; line-height: 1; }
+  .lb-hero-pts-label { font-size: 11px; color: #FFD6EC; }
+
+  .lb-meta-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 10px; }
+  .lb-league-name { font-family: 'Anton', Impact, sans-serif; font-size: 20px; color: #1A1F5E; }
+  .lb-member-count { font-size: 12px; color: #7080b0; }
+  .lb-round-pills { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+
+  .lb-table { background: #fff; border-radius: 12px; border: 1.5px solid #FFD6EC; overflow: hidden; }
+  .lb-table-header { display: grid; grid-template-columns: 52px 36px 1fr 180px 110px 90px; align-items: center; padding: 10px 16px; background: #1A1F5E; font-size: 9px; font-weight: 700; color: #aab0e8; text-transform: uppercase; letter-spacing: 1px; gap: 12px; }
+  .lb-row { display: grid; grid-template-columns: 52px 36px 1fr 180px 110px 90px; align-items: center; padding: 12px 16px; border-bottom: 1px solid #FFF0F8; transition: background 0.15s; gap: 12px; }
+  .lb-row:last-child { border-bottom: none; }
+  .lb-row:hover { background: #FFF5FA; }
+  .lb-row.me { background: #FFF0F8; }
+  .lb-row.me:hover { background: #FFE8F4; }
+
+  .lb-pos { font-family: 'Anton', Impact, sans-serif; font-size: 18px; color: #c070a0; text-align: center; }
+  .lb-pos.gold { color: #D4A843; }
+  .lb-pos.silver { color: #9090a0; }
+  .lb-pos.bronze { color: #b07040; }
+  .lb-pos.me-pos { color: #E8007D; }
+
+  .lb-avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 800; flex-shrink: 0; }
+  .lb-user-info { min-width: 0; }
+  .lb-username { font-size: 13px; font-weight: 700; color: #1A1F5E; }
+  .lb-username.me-label::after { content: '  (You)'; color: #E8007D; font-size: 11px; font-weight: 600; }
+  .lb-team-name { font-size: 10px; color: #7080b0; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .lb-picks { display: flex; gap: 4px; flex-wrap: wrap; }
+  .lb-pick-chip { font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: 700; background: #FFF0F8; color: #E8007D; border: 1px solid #FFD6EC; white-space: nowrap; }
+  .lb-pick-chip.captain { background: #1A1F5E; color: #FFD6EC; border-color: #2D3480; }
+
+  .lb-score-col { text-align: right; }
+  .lb-pts { font-size: 17px; font-weight: 800; color: #E8007D; font-variant-numeric: tabular-nums; }
+  .lb-pts-label { font-size: 9px; color: #7080b0; }
+  .lb-change { font-size: 11px; font-weight: 700; text-align: center; }
+  .lb-change.up { color: #2a9a50; }
+  .lb-change.dn { color: #cc3344; }
+  .lb-change.eq { color: #9090a0; }
+
+  /* ── RULES & SCORING ── */
+  .rules-outer { height: calc(100vh - 114px); overflow-y: auto; background: #FFF5FA; }
+  .rules-container { max-width: 1000px; margin: 0 auto; padding: 28px 24px 60px; }
+
+  .rules-hero {
+    display: flex; align-items: center; gap: 16px; margin-bottom: 28px;
+    background: linear-gradient(135deg, #E8007D, #C4006A);
+    border-radius: 12px; padding: 22px 28px;
+  }
+  .rules-hero-icon { font-size: 40px; flex-shrink: 0; }
+  .rules-hero-title { font-family: 'Anton', Impact, sans-serif; font-size: 30px; color: #fff; line-height: 1; }
+  .rules-hero-sub { font-size: 12px; color: #FFD6EC; margin-top: 5px; letter-spacing: 0.5px; }
+
+  .rules-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .rules-card { background: #fff; border: 1.5px solid #FFD6EC; border-radius: 12px; overflow: hidden; }
+  .rules-card-full { grid-column: 1 / -1; }
+  .rules-card-header {
+    background: #1A1F5E; color: #fff; padding: 12px 18px;
+    font-size: 13px; font-weight: 800; letter-spacing: 0.3px;
+  }
+  .rules-card-body { padding: 18px; font-size: 13px; color: #3a4070; line-height: 1.65; }
+  .rules-card-body p { margin: 0; }
+  .rules-card-body strong { color: #1A1F5E; }
+
+  .rules-row { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
+  .rules-row:last-child { margin-bottom: 0; }
+  .rules-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+  .rules-sub { font-size: 11px; color: #7080b0; margin-top: 2px; line-height: 1.5; }
+
+  .rules-split-row { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+  .rules-split-row:last-of-type { margin-bottom: 0; }
+  .rules-split-pct { color: #fff; font-size: 13px; font-weight: 900; padding: 5px 12px; border-radius: 20px; min-width: 52px; text-align: center; flex-shrink: 0; }
+
+  .rules-callout { background: #FFF0F8; border: 1.5px solid #FFD6EC; border-radius: 8px; padding: 12px 14px; margin-top: 14px; }
+  .rules-callout-example { font-size: 12px; color: #3a4070; line-height: 1.6; }
+  .rules-callout-example strong { color: #E8007D; }
+
+  .rules-deadline-box { background: #1A1F5E; border-radius: 10px; padding: 16px; text-align: center; }
+  .rules-deadline-label { font-size: 10px; color: #aab0e8; text-transform: uppercase; letter-spacing: 2px; font-weight: 700; }
+  .rules-deadline-time { font-family: 'Anton', Impact, sans-serif; font-size: 32px; color: #fff; margin: 4px 0; }
+  .rules-deadline-date { font-size: 12px; color: #FFD6EC; font-weight: 600; }
+
+  .rules-example-table { border: 1.5px solid #FFD6EC; border-radius: 8px; overflow: hidden; font-size: 12px; }
+  .rules-example-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: 0; padding: 9px 14px; background: #1A1F5E; color: #aab0e8; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+  .rules-example-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: 0; padding: 10px 14px; border-top: 1px solid #FFF0F8; color: #3a4070; align-items: center; }
+  .rules-example-row.rules-example-cap { background: #EEF0FF; font-weight: 700; color: #1A1F5E; }
+  .rules-example-row.rules-example-alt { background: #FFF8FC; color: #a080b0; font-style: italic; }
+  .rules-example-score { font-weight: 800; color: #E8007D; font-variant-numeric: tabular-nums; }
+  .rules-example-cap .rules-example-score { color: #1A1F5E; }
+
+  /* ── JOIN LEAGUE ── */
+  .join-outer { min-height: calc(100vh - 158px); display: flex; align-items: center; justify-content: center; background: #FFF5FA; padding: 24px; }
+  .join-card {
+    background: #fff; border: 2px solid #FFD6EC; border-radius: 16px;
+    padding: 40px 44px; width: 100%; max-width: 420px;
+    box-shadow: 0 8px 32px rgba(232,0,125,0.1);
+    text-align: center;
+  }
+  .join-emblem { width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, #E8007D, #C4006A); display: flex; align-items: center; justify-content: center; font-size: 30px; margin: 0 auto 18px; box-shadow: 0 4px 16px rgba(232,0,125,0.3); }
+  .join-title { font-family: 'Anton', Impact, sans-serif; font-size: 28px; color: #1A1F5E; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .join-sub { font-size: 12px; color: #7080b0; margin-bottom: 28px; }
+  .join-tabs { display: flex; background: #FFF5FA; border-radius: 8px; padding: 3px; margin-bottom: 24px; border: 1.5px solid #FFD6EC; }
+  .join-tab { flex: 1; padding: 8px; font-size: 12px; font-weight: 700; cursor: pointer; border-radius: 6px; color: #7080b0; transition: all 0.2s; }
+  .join-tab.active { background: #E8007D; color: #fff; }
+  .join-label { display: block; font-size: 11px; font-weight: 700; color: #1A1F5E; text-align: left; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .join-input { width: 100%; background: #FFF5FA; border: 2px solid #FFD6EC; border-radius: 8px; padding: 11px 14px; font-size: 13px; color: #1A1F5E; outline: none; margin-bottom: 14px; font-family: inherit; transition: border-color 0.2s; }
+  .join-input:focus { border-color: #E8007D; box-shadow: 0 0 0 3px rgba(232,0,125,0.1); background: #fff; }
+  .join-input::placeholder { color: #d0a0c0; }
+  .join-btn { width: 100%; background: linear-gradient(135deg, #E8007D, #C4006A); color: #fff; border: none; border-radius: 8px; padding: 13px; font-size: 14px; font-weight: 800; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; font-family: inherit; transition: all 0.2s; margin-top: 4px; }
+  .join-btn:hover { background: linear-gradient(135deg, #C4006A, #1A1F5E); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(232,0,125,0.3); }
+  .join-divider { display: flex; align-items: center; gap: 12px; margin: 18px 0; }
+  .join-divider-line { flex: 1; height: 1px; background: #FFD6EC; }
+  .join-divider-text { font-size: 11px; color: #c070a0; font-weight: 600; }
+  .join-code-input { width: 100%; background: #FFF5FA; border: 2px dashed #E8007D; border-radius: 8px; padding: 11px 14px; font-size: 14px; color: #1A1F5E; outline: none; margin-bottom: 14px; font-family: inherit; text-align: center; letter-spacing: 4px; font-weight: 700; text-transform: uppercase; }
+  .join-code-input:focus { background: #fff; box-shadow: 0 0 0 3px rgba(232,0,125,0.1); }
+  .join-forgot { font-size: 11px; color: #E8007D; cursor: pointer; text-decoration: underline; margin-top: 10px; display: block; }
+  .join-signup-prompt { font-size: 12px; color: #7080b0; margin-top: 20px; padding-top: 16px; border-top: 1px solid #FFD6EC; }
+  .join-signup-prompt a { color: #E8007D; font-weight: 700; cursor: pointer; text-decoration: none; }
+
+  /* ── LEAGUE PAGE ── */
+  .league-outer { height: calc(100vh - 114px); overflow-y: auto; background: #FFF5FA; }
+  .league-container { max-width: 640px; margin: 0 auto; padding: 24px 24px 60px; }
+  .league-hero { background: linear-gradient(135deg, #1A1F5E, #2D3480); border: 2px solid #E8007D; border-radius: 12px; padding: 20px 24px; margin-bottom: 18px; color: #fff; }
+  .league-hero-name { font-family: 'Anton', Impact, sans-serif; font-size: 24px; }
+  .league-hero-code-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+  .league-code-chip { background: rgba(255,255,255,0.15); border: 1.5px dashed rgba(255,255,255,0.4); border-radius: 6px; padding: 5px 12px; font-family: 'Anton', Impact, sans-serif; font-size: 15px; letter-spacing: 2px; color: #FFD6EC; }
+  .league-hero-sub { font-size: 11px; color: #aab0e8; margin-top: 8px; }
+  .league-card { background: #fff; border: 1.5px solid #FFD6EC; border-radius: 12px; padding: 20px 22px; margin-bottom: 18px; }
+  .league-card-header { font-family: 'Anton', Impact, sans-serif; font-size: 17px; color: #1A1F5E; margin-bottom: 12px; }
+  .league-member-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #FFF0F8; }
+  .league-member-row:last-child { border-bottom: none; }
+  .league-member-avatar { width: 30px; height: 30px; border-radius: 50%; background: #FFF0F8; color: #E8007D; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+  .league-member-name { font-size: 13px; font-weight: 700; color: #1A1F5E; }
+  .league-manager-badge { background: #1A1F5E; color: #FFD6EC; font-size: 8px; font-weight: 900; padding: 2px 6px; border-radius: 3px; text-transform: uppercase; margin-left: 6px; }
+  .schedule-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 10px; }
+  .schedule-input { background: #FFF5FA; border: 2px solid #FFD6EC; border-radius: 8px; padding: 9px 12px; font-size: 13px; color: #1A1F5E; outline: none; font-family: inherit; }
+  .schedule-input:focus { border-color: #E8007D; }
+  .schedule-status { background: #FFF0F8; border: 1.5px solid #FFD6EC; border-radius: 8px; padding: 10px 14px; font-size: 12px; color: #a060c0; font-weight: 700; }
+  .schedule-status.set { background: #e8fff2; border-color: #2a9a50; color: #1a5a38; }
+  .league-leave-link { font-size: 11px; color: #cc3344; cursor: pointer; text-decoration: underline; }
+
+  /* ── DRAFT ROOM ── */
+  .draft-outer { height: calc(100vh - 114px); overflow-y: auto; background: #FFF5FA; }
+  .draft-container { max-width: 1200px; margin: 0 auto; padding: 20px 24px 60px; }
+
+  .draft-hero {
+    background: linear-gradient(135deg, #1A1F5E, #2D3480); border: 2px solid #E8007D;
+    border-radius: 12px; padding: 18px 26px; margin-bottom: 18px;
+    display: flex; align-items: center; gap: 26px; color: #fff; flex-wrap: wrap;
+  }
+  .draft-hero-title { font-family: 'Anton', Impact, sans-serif; font-size: 24px; }
+  .draft-hero-sub { font-size: 11px; color: #aab0e8; margin-top: 4px; max-width: 420px; }
+  .draft-hero-stat { text-align: center; }
+  .draft-hero-stat-val { font-family: 'Anton', Impact, sans-serif; font-size: 24px; color: #E8007D; }
+  .draft-hero-stat-label { font-size: 9px; color: #aab0e8; text-transform: uppercase; letter-spacing: 1px; }
+  .draft-hero-btns { margin-left: auto; display: flex; gap: 8px; flex-shrink: 0; }
+  .draft-start-btn {
+    background: linear-gradient(135deg, #E8007D, #C4006A); color: #fff; border: none;
+    border-radius: 8px; padding: 12px 22px; font-size: 12px; font-weight: 800; cursor: pointer;
+    text-transform: uppercase; letter-spacing: 1px; font-family: inherit; transition: all 0.2s;
+  }
+  .draft-start-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(232,0,125,0.35); }
+  .draft-start-btn.ghost { background: rgba(255,255,255,0.12); border: 1.5px solid rgba(255,255,255,0.3); }
+  .draft-start-btn.ghost:hover { background: rgba(255,255,255,0.22); }
+
+  .draft-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 18px; align-items: start; }
+  @media (max-width: 900px) { .draft-layout { grid-template-columns: 1fr; } }
+
+  .draft-lot-card { background: #fff; border: 2px solid #FFD6EC; border-radius: 14px; padding: 22px; margin-bottom: 18px; }
+  .draft-lot-empty { text-align: center; padding: 46px 20px; color: #c070a0; font-size: 13px; }
+
+  .draft-clock-ring {
+    --pct: 100%;
+    width: 78px; height: 78px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-family: 'Anton', Impact, sans-serif; font-size: 24px; color: #fff;
+    background: conic-gradient(#E8007D var(--pct), #2D3480 0); position: relative; flex-shrink: 0;
+  }
+  .draft-clock-ring::before { content: ''; position: absolute; inset: 6px; background: #1A1F5E; border-radius: 50%; }
+  .draft-clock-ring span { position: relative; z-index: 1; }
+  .draft-clock-ring.urgent { animation: draftPulse 0.6s infinite; }
+  @keyframes draftPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(204,51,68,0.55); } 50% { box-shadow: 0 0 0 9px rgba(204,51,68,0); } }
+
+  .draft-lot-top { display: flex; align-items: center; gap: 18px; }
+  .draft-lot-avatar { width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #E8007D, #C4006A); display: flex; align-items: center; justify-content: center; font-size: 30px; flex-shrink: 0; border: 3px solid #FFD6EC; }
+  .draft-lot-info { flex: 1; min-width: 0; }
+  .draft-lot-name { font-family: 'Anton', Impact, sans-serif; font-size: 21px; color: #1A1F5E; line-height: 1.1; }
+  .draft-lot-meta { font-size: 11px; color: #7080b0; margin-top: 3px; }
+  .draft-lot-guide { font-size: 10px; color: #a060c0; margin-top: 4px; }
+
+  .draft-bid-row { display: flex; align-items: center; justify-content: space-between; margin-top: 18px; padding-top: 16px; border-top: 1.5px solid #FFF0F8; flex-wrap: wrap; gap: 14px; }
+  .draft-current-bid-val { font-family: 'Anton', Impact, sans-serif; font-size: 32px; color: #E8007D; line-height: 1; }
+  .draft-current-bid-by { font-size: 11px; color: #7080b0; margin-top: 3px; }
+  .draft-current-bid-by strong { color: #1A1F5E; }
+
+  .draft-bid-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .draft-bid-chip { background: #fff; border: 1.5px solid #FFD6EC; color: #1A1F5E; font-size: 12px; font-weight: 800; padding: 9px 14px; border-radius: 7px; cursor: pointer; transition: all 0.15s; font-family: inherit; }
+  .draft-bid-chip:hover:not(:disabled) { border-color: #E8007D; color: #E8007D; }
+  .draft-bid-chip:disabled { opacity: 0.4; cursor: not-allowed; }
+  .draft-bid-chip.primary { background: linear-gradient(135deg, #E8007D, #C4006A); border-color: transparent; color: #fff; }
+  .draft-bid-chip.primary:hover:not(:disabled) { background: linear-gradient(135deg, #1A1F5E, #2D3480); color: #fff; }
+  .draft-custom-bid { background: #FFF5FA; border: 2px solid #FFD6EC; border-radius: 7px; padding: 8px 10px; width: 100px; font-size: 12px; color: #1A1F5E; outline: none; font-family: inherit; }
+  .draft-custom-bid:focus { border-color: #E8007D; }
+
+  .draft-you-winning { background: #e8fff2; border: 1.5px solid #2a9a50; color: #2a7a50; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 700; margin-top: 14px; }
+  .draft-you-outbid  { background: #fff0f0; border: 1.5px solid #cc3344; color: #cc3344; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 700; margin-top: 14px; }
+
+  .draft-nominate-panel { margin-top: 14px; }
+  .draft-nominate-search { background: #FFF5FA; border: 2px solid #FFD6EC; border-radius: 8px; padding: 9px 12px; width: 100%; color: #1A1F5E; font-size: 12px; outline: none; margin-bottom: 10px; font-family: inherit; }
+  .draft-nominate-search:focus { border-color: #E8007D; }
+  .draft-nominate-list { display: flex; flex-direction: column; gap: 6px; max-height: 360px; overflow-y: auto; }
+  .draft-nom-row { background: #FFF5FA; border: 1.5px solid #FFD6EC; border-radius: 8px; padding: 8px 12px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: all 0.15s; }
+  .draft-nom-row:hover { border-color: #E8007D; background: #FFF0F8; }
+
+  .draft-waiting { display: flex; align-items: center; gap: 14px; padding: 34px 10px; color: #7080b0; font-size: 13px; }
+  .draft-waiting-dot { width: 10px; height: 10px; border-radius: 50%; background: #E8007D; animation: draftBlink 1s infinite; flex-shrink: 0; }
+  @keyframes draftBlink { 0%,100% { opacity: 1; } 50% { opacity: 0.2; } }
+
+  .draft-board { background: #fff; border: 1.5px solid #FFD6EC; border-radius: 12px; overflow: hidden; }
+  .draft-board-header { background: #1A1F5E; color: #fff; padding: 12px 16px; font-size: 12px; font-weight: 800; display: flex; justify-content: space-between; align-items: center; }
+  .draft-board-header span:last-child { cursor: pointer; color: #aab0e8; font-weight: 700; font-size: 11px; }
+  .draft-board-header span:last-child:hover { color: #fff; }
+  .draft-board-body { max-height: 560px; overflow-y: auto; }
+  .draft-team-card { padding: 10px 14px; border-bottom: 1px solid #FFF0F8; display: flex; align-items: center; gap: 10px; }
+  .draft-team-card:last-child { border-bottom: none; }
+  .draft-team-card.you { background: #FFF0F8; }
+  .draft-team-card.on-clock { background: #EEF0FF; }
+  .draft-team-avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+  .draft-team-info { flex: 1; min-width: 0; }
+  .draft-team-name { font-size: 12px; font-weight: 700; color: #1A1F5E; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .draft-team-sub { font-size: 10px; color: #7080b0; }
+  .draft-team-right { text-align: right; flex-shrink: 0; }
+  .draft-team-budget { font-size: 12px; font-weight: 800; color: #E8007D; }
+  .draft-team-slots { font-size: 9px; color: #7080b0; }
+  .draft-onclock-badge { background: #E8007D; color: #fff; font-size: 8px; font-weight: 900; padding: 2px 6px; border-radius: 3px; text-transform: uppercase; margin-left: 5px; }
+
+  .draft-log { background: #fff; border: 1.5px solid #FFD6EC; border-radius: 12px; overflow: hidden; margin-top: 18px; }
+  .draft-log-header { background: #1A1F5E; color: #fff; padding: 12px 16px; font-size: 12px; font-weight: 800; }
+  .draft-log-body { max-height: 280px; overflow-y: auto; }
+  .draft-log-row { padding: 9px 16px; border-bottom: 1px solid #FFF0F8; display: flex; align-items: center; gap: 8px; font-size: 11px; color: #3a4070; }
+  .draft-log-row:last-child { border-bottom: none; }
+  .draft-log-price { font-weight: 800; color: #E8007D; margin-left: auto; }
+
+  .draft-complete-banner { background: linear-gradient(135deg, #2a9a50, #1a5a38); color: #fff; border-radius: 12px; padding: 20px 26px; text-align: center; margin-bottom: 18px; }
+  .draft-import-btn { background: #fff; color: #2a7a50; border: none; border-radius: 8px; padding: 12px 26px; font-size: 13px; font-weight: 800; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; font-family: inherit; margin-top: 12px; }
+  .draft-import-btn:hover { background: #FFF0F8; }
+
+  /* ── MY STABLE (read-only roster view) ── */
+  .myteam-outer { height: calc(100vh - 158px); overflow-y: auto; background: #FFF5FA; }
+  .myteam-container { max-width: 640px; margin: 0 auto; padding: 24px 24px 60px; }
+  .myteam-cta-btn {
+    background: linear-gradient(135deg, #E8007D, #C4006A); color: #fff; border: none;
+    border-radius: 8px; padding: 12px 26px; font-size: 13px; font-weight: 800; cursor: pointer;
+    text-transform: uppercase; letter-spacing: 1px; font-family: inherit; margin-top: 16px; transition: all 0.2s;
+  }
+  .myteam-cta-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(232,0,125,0.3); }
+
+  /* ── DATA IMPORT (admin) ── */
+  .admin-outer { height: calc(100vh - 114px); overflow-y: auto; background: #FFF5FA; }
+  .admin-container { max-width: 900px; margin: 0 auto; padding: 24px 24px 60px; }
+  .admin-banner { background: #1A1F5E; border: 1.5px solid #E8007D; border-radius: 10px; padding: 12px 16px; margin-bottom: 20px; font-size: 11px; color: #FFD6EC; }
+  .admin-card { background: #fff; border: 1.5px solid #FFD6EC; border-radius: 12px; padding: 20px 22px; margin-bottom: 18px; }
+  .admin-card-header { font-family: 'Anton', Impact, sans-serif; font-size: 18px; color: #1A1F5E; margin-bottom: 4px; }
+  .admin-card-sub { font-size: 11px; color: #7080b0; margin-bottom: 14px; line-height: 1.5; }
+  .admin-file-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .admin-file-input { flex: 1; min-width: 220px; background: #FFF5FA; border: 2px dashed #FFD6EC; border-radius: 8px; padding: 10px 12px; font-size: 12px; font-family: inherit; }
+  .admin-import-btn { background: linear-gradient(135deg, #E8007D, #C4006A); color: #fff; border: none; border-radius: 8px; padding: 10px 20px; font-size: 12px; font-weight: 800; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; font-family: inherit; transition: all 0.2s; white-space: nowrap; }
+  .admin-import-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(232,0,125,0.3); }
+  .admin-result { margin-top: 14px; border-radius: 8px; padding: 12px 14px; font-size: 12px; line-height: 1.6; }
+  .admin-result.ok { background: #e8fff2; border: 1.5px solid #2a9a50; color: #1a5a38; }
+  .admin-result.err { background: #fff0f0; border: 1.5px solid #cc3344; color: #a02030; }
+  .admin-result-stat { display: inline-block; background: #fff; border-radius: 5px; padding: 2px 8px; font-weight: 800; margin-right: 6px; }
+  .admin-new-list { margin-top: 8px; max-height: 140px; overflow-y: auto; background: rgba(255,255,255,0.6); border-radius: 6px; padding: 6px 10px; font-size: 11px; color: #3a4070; }
+  .admin-stat-row { display: flex; gap: 20px; margin-bottom: 18px; flex-wrap: wrap; }
+  .admin-stat-box { background: #fff; border: 1.5px solid #FFD6EC; border-radius: 10px; padding: 12px 18px; }
+  .admin-stat-val { font-family: 'Anton', Impact, sans-serif; font-size: 22px; color: #E8007D; }
+  .admin-stat-label { font-size: 9px; color: #7080b0; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
+  .admin-reset-link { font-size: 11px; color: #cc3344; cursor: pointer; text-decoration: underline; }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+
+<!-- ══ LOGIN GATE — must sign in to access the platform ══ -->
+<div class="join-outer" id="authGate" style="min-height:100vh;">
+  <div class="join-card">
+    <div class="join-emblem">🏇</div>
+    <div class="join-title">Spring Racing Carnival SuperStable</div>
+    <div class="join-sub">Sign in to access your stable, or create an account to get started</div>
+
+    <div class="join-tabs">
+      <div class="join-tab active" id="atab-signin" onclick="switchAuthTab('signin')">Sign In</div>
+      <div class="join-tab"        id="atab-join"   onclick="switchAuthTab('join')">Create Account</div>
+    </div>
+
+    <div id="aform-signin">
+      <label class="join-label">Username</label>
+      <input class="join-input" type="text" id="authSigninUsername" placeholder="e.g. SpringKing_Melb" />
+      <label class="join-label">Password</label>
+      <input class="join-input" type="password" id="authSigninPassword" placeholder="Enter your password" />
+      <button class="join-btn" onclick="handleSignIn()">Sign In</button>
+      <div class="join-signup-prompt">
+        New here? <a onclick="switchAuthTab('join')">Create an account →</a>
+      </div>
+    </div>
+
+    <div id="aform-join" style="display:none">
+      <label class="join-label">Choose a Username</label>
+      <input class="join-input" type="text" id="authJoinUsername" placeholder="e.g. SpringKing_Melb" />
+      <label class="join-label">Email Address</label>
+      <input class="join-input" type="email" id="authJoinEmail" placeholder="you@email.com" />
+      <label class="join-label">Password</label>
+      <input class="join-input" type="password" id="authJoinPassword" placeholder="Create a password" />
+      <button class="join-btn" onclick="handleJoin()">Create Account</button>
+      <div class="join-signup-prompt">
+        Already have an account? <a onclick="switchAuthTab('signin')">Sign in →</a>
+      </div>
+    </div>
+
+    <div style="margin-top:18px;font-size:10px;color:#c070a0;line-height:1.5;">
+      This is a local preview — accounts are stored only in this browser, so other people won't yet see your stable. Full cross-device multiplayer arrives with the live version.
+    </div>
+  </div>
+</div>
+
+<!-- ══ MAIN APP — hidden until signed in ══ -->
+<div id="appShell" style="display:none;">
+
+<div class="header">
+  <div class="logo-wrap">
+    <div class="logo-emblem">🏇</div>
+    <div>
+      <div class="logo-title">Spring Racing Carnival SuperStable</div>
+      <div class="logo-sub">Fantasy Horse Racing Game</div>
+    </div>
+  </div>
+  <div class="header-centre" style="display:flex;align-items:center;gap:12px;">
+    <span style="color:#FFD6EC;font-size:12px;font-weight:700;">👤 <span id="userBadgeName"></span></span>
+    <button onclick="logout()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.35);color:#fff;border-radius:6px;padding:7px 14px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;text-transform:uppercase;letter-spacing:0.5px;">Log Out</button>
+  </div>
+</div>
+
+<div class="round-bar">
+  <span class="round-detail"></span>
+  <div class="round-spacer"></div>
+  <div class="deadline">Picks lock <strong>5:00 PM AEDT · Fri 28 Aug 2026</strong></div>
+</div>
+
+<!-- TOP NAV -->
+<div class="top-nav">
+  <div class="top-nav-tab active" id="nav-draft"        onclick="showPage('draft')">🔨 Draft Room</div>
+  <div class="top-nav-tab"        id="nav-myteam"        onclick="showPage('myteam')">🏇 My Stable</div>
+  <div class="top-nav-tab"        id="nav-transfer"     onclick="showPage('transfer')">🔄 Stable Transfer</div>
+  <div class="top-nav-tab"        id="nav-leaderboard"  onclick="showPage('leaderboard')">🏆 Leaderboard</div>
+  <div class="top-nav-tab"        id="nav-joinleague"   onclick="showPage('joinleague')">🔗 Join A League</div>
+  <div class="top-nav-tab"        id="nav-rules"        onclick="showPage('rules')">📋 Rules &amp; Scoring</div>
+  <div class="top-nav-tab"        id="nav-inplay"       onclick="showPage('inplay')">📋 My Stable — Acceptances</div>
+  <div class="top-nav-tab"        id="nav-dataimport"   onclick="showPage('dataimport')" style="color:#c070a0;">🗂️ Data Import (Admin)</div>
+</div>
+
+<!-- ══ PAGE: MY STABLE (read-only — built via the Draft Room) ══ -->
+<div class="page" id="page-myteam">
+
+  <div class="budget-bar-row">
+    <div class="budget-bar-inner">
+      <div class="budget-bar-label">Salary Cap Spent</div>
+      <div class="budget-bar-amount" id="budgetDisplay">$100</div>
+      <div class="budget-bar-of">of $100</div>
+    </div>
+    <div class="budget-bar-track">
+      <div class="budget-bar-fill" id="budgetBar" style="width:100%"></div>
+    </div>
+  </div>
+
+  <div class="myteam-outer">
+    <div class="myteam-container" id="myteamContainer">
+      <!-- populated by renderMyStablePage() -->
+    </div>
+  </div>
+</div>
+
+<!-- ══ PAGE: DRAFT ROOM ══ -->
+<div class="page active" id="page-draft">
+  <div class="draft-outer">
+    <div class="draft-container">
+
+      <div class="draft-hero">
+        <div>
+          <div class="draft-hero-title">🔨 Live Auction Draft</div>
+          <div class="draft-hero-sub" id="draftHeroSub">Nominate horses and build your stable in this live auction draft — $100 cap. Other managers join once they log in to this draft room.</div>
+        </div>
+        <div class="draft-hero-stat"><div class="draft-hero-stat-val" id="draftYourBudget">$100</div><div class="draft-hero-stat-label">Your Cap Left</div></div>
+        <div class="draft-hero-stat"><div class="draft-hero-stat-val" id="draftYourSlots">0/13</div><div class="draft-hero-stat-label">Horses Won</div></div>
+        <div class="draft-hero-btns">
+          <button class="draft-start-btn ghost" id="draftFastBtn" style="display:none;" onclick="simulateRestOfDraft()">⏩ Simulate Rest</button>
+          <button class="draft-start-btn" id="draftStartBtn" onclick="startDraft()">Start Draft</button>
+        </div>
+      </div>
+
+      <div id="draftBody"></div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══ PAGE: LEADERBOARD ══ -->
+<div class="page" id="page-leaderboard">
+  <div class="lb-container">
+
+    <div class="lb-hero">
+      <div class="lb-hero-rank" id="lbHeroRank">#—</div>
+      <div class="lb-hero-info">
+        <div class="lb-hero-label">Your Standing · The Flemington Faithful</div>
+        <div class="lb-hero-name" id="lbHeroName">—</div>
+      </div>
+      <div class="lb-hero-score">
+        <div class="lb-hero-pts" id="lbHeroPts">$0</div>
+        <div class="lb-hero-pts-label">total earnings</div>
+      </div>
+    </div>
+
+    <div class="lb-meta-row">
+      <div>
+        <div class="lb-league-name">The Flemington Faithful</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+        <label style="font-size:11px;font-weight:700;color:#7080b0;text-transform:uppercase;letter-spacing:0.5px;">Filter:</label>
+        <select id="lbRoundSelect" onchange="setLbRound(this.value)" style="background:#fff;border:1.5px solid #FFD6EC;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;color:#1A1F5E;cursor:pointer;font-family:inherit;outline:none;">
+          <option value="full">Full Season</option>
+          <option value="1">Week 1</option>
+          <option value="2">Week 2</option>
+          <option value="3">Week 3</option>
+          <option value="4">Week 4</option>
+          <option value="5">Week 5</option>
+          <option value="6">Week 6</option>
+          <option value="7">Week 7</option>
+          <option value="8">Week 8</option>
+          <option value="9">Week 9</option>
+          <option value="10">Week 10</option>
+          <option value="11">Week 11</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="lb-table">
+      <div class="lb-table-header">
+        <div>Rank</div>
+        <div></div>
+        <div>Manager</div>
+        <div>Top Horse</div>
+        <div style="text-align:right">Earnings</div>
+        <div style="text-align:center">Move</div>
+      </div>
+      <div id="lbRows"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PAGE: RULES & SCORING ══ -->
+<div class="page" id="page-rules">
+  <div class="rules-outer">
+    <div class="rules-container">
+
+      <div class="rules-hero">
+        <div class="rules-hero-icon">📋</div>
+        <div>
+          <div class="rules-hero-title">Rules &amp; Scoring</div>
+        </div>
+      </div>
+
+      <div class="rules-grid">
+
+        <div class="rules-card rules-card-full">
+          <div class="rules-card-header">🏇 How It Works</div>
+          <div class="rules-card-body">
+            <p>Spring Racing Carnival SuperStable is a fantasy game based on the real prizemoney earned during Victoria's Spring Racing Carnival — from Memsie Stakes Day at Caulfield (29 August) through to C.F. Orr Stakes Day at Caulfield (14 November). You build a stable of horses within a fixed salary cap by winning them in a live auction draft against rival managers. Horses score 100% of their prizemoney, so every dollar your stable earns on track is a dollar on your scoreboard.</p>
+          </div>
+        </div>
+
+        <div class="rules-card">
+          <div class="rules-card-header">👥 Stable Structure</div>
+          <div class="rules-card-body">
+            <div class="rules-row"><span class="rules-icon">🐎</span><div><strong>10 Horses</strong><div class="rules-sub">Your whole stable, won in the live auction draft. Every horse scores based on <strong>100%</strong> of prizemoney earned across the carnival — there's no bench, so every pick counts every week. Horses can be transferred in and out during the season — see Stable Transfer rules below.</div></div></div>
+          </div>
+        </div>
+
+        <div class="rules-card">
+          <div class="rules-card-header">💰 Prizemoney Splits</div>
+          <div class="rules-card-body">
+            <p style="margin-bottom:14px">Scoring is derived from real prizemoney distributed across the Spring Racing Carnival:</p>
+            <div class="rules-split-row"><div class="rules-split-pct" style="background:#E8007D">100%</div><div><strong>Horses</strong><div class="rules-sub">Your horse selections score the full prizemoney value of every race they win or place in</div></div></div>
+            <p style="margin-top:12px;font-size:11px;color:#7080b0;">All figures shown in the player pool already reflect the correct split for each category — no further calculation required.</p>
+          </div>
+        </div>
+
+        <div class="rules-card">
+          <div class="rules-card-header">⭐ The Captain</div>
+          <div class="rules-card-body">
+            <p>One horse in your stable is designated your <strong>Captain</strong> each week. Your Captain's prizemoney is multiplied by <strong>2×</strong>, making it the most important selection decision you make each week.</p>
+            <div class="rules-callout">
+              <div class="rules-callout-example">Example: If your Captain earns <strong>$3M</strong> in prizemoney in a given race, their score is doubled to <strong>$6M</strong>.</div>
+            </div>
+            <p style="margin-top:12px">You can change your Captain before each week's Friday 5pm AEDT deadline. In <strong>My Stable</strong>, drag any horse into the gold Captain slot, or drag your current Captain out to replace them. You can also designate a <strong>Vice Captain</strong> — if your Captain is scratched, your Vice Captain steps up automatically.</p>
+          </div>
+        </div>
+
+        <div class="rules-card">
+          <div class="rules-card-header">💵 Salary Cap</div>
+          <div class="rules-card-body">
+            <div class="rules-row"><span class="rules-icon">💰</span><div><strong>Salary Cap: $100</strong><div class="rules-sub">This is the cap every manager drafts with — spend it winning bids on your 10 horses in the live auction draft</div></div></div>
+            <div class="rules-row"><span class="rules-icon">📊</span><div><strong>Horse Pricing</strong><div class="rules-sub">Horses have no preset price. Every horse opens the auction at $1 and the market decides what it's worth — bid on what you rate, not a catalogue number</div></div></div>
+            <div class="rules-row"><span class="rules-icon">🚫</span><div><strong>No Overspending</strong><div class="rules-sub">You cannot bid more than your remaining cap during the draft, once at least $1 is set aside for every remaining empty slot</div></div></div>
+          </div>
+        </div>
+
+        <div class="rules-card">
+          <div class="rules-card-header">⏰ Selection Deadline</div>
+          <div class="rules-card-body">
+            <div class="rules-deadline-box">
+              <div class="rules-deadline-label">Selections Lock</div>
+              <div class="rules-deadline-time">5:00 PM AEDT</div>
+              <div class="rules-deadline-date">Friday 28 August 2026 (before Memsie Stakes Day, 29 Aug)</div>
+            </div>
+            <p style="margin-top:14px">Your live auction draft must be completed before this deadline. Your Captain can be changed each week before that week's transfer deadline — make sure your Captain choice reflects who is racing that week.</p>
+          </div>
+        </div>
+
+        <div class="rules-card">
+          <div class="rules-card-header">🏆 Leagues &amp; Leaderboard</div>
+          <div class="rules-card-body">
+            <div class="rules-row"><span class="rules-icon">🔗</span><div><strong>Join a League</strong><div class="rules-sub">Use a league code shared by your league admin to join a private competition against friends or colleagues</div></div></div>
+            <div class="rules-row"><span class="rules-icon">📈</span><div><strong>Live Rankings</strong><div class="rules-sub">The leaderboard updates in real time as race results and prizemoney distributions are confirmed across the carnival</div></div></div>
+            <div class="rules-row"><span class="rules-icon">🎯</span><div><strong>Weekly &amp; Full Season Rankings</strong><div class="rules-sub">View your standings across the full season, or filter by individual week (Weeks 1–11) to see how you performed in any given race day window</div></div></div>
+          </div>
+        </div>
+
+        <div class="rules-card rules-card-full">
+          <div class="rules-card-header">📐 Scoring Example</div>
+          <div class="rules-card-body">
+            <p style="margin-bottom:16px">Here's an example of how a team's score is calculated:</p>
+            <div class="rules-example-table">
+              <div class="rules-example-header">
+                <span>Selection</span><span>Role</span><span>Prizemoney Share</span><span>Split</span><span>Score</span>
+              </div>
+              <div class="rules-example-row rules-example-cap">
+                <span>Half Yours ⭐</span><span>Captain</span><span>$7M</span><span>100% × 2</span><span class="rules-example-score">$14.00M</span>
+              </div>
+              <div class="rules-example-row">
+                <span>Buckaroo</span><span>Horse</span><span>$6M</span><span>100%</span><span class="rules-example-score">$6.00M</span>
+              </div>
+              <div class="rules-example-row">
+                <span>Sir Delius</span><span>Horse</span><span>$3M</span><span>100%</span><span class="rules-example-score">$3.00M</span>
+              </div>
+              <div class="rules-example-row rules-example-alt">
+                <span>+ 7 more horses</span><span>Horses</span><span>—</span><span>100%</span><span class="rules-example-score">varies</span>
+              </div>
+            </div>
+            <p style="margin-top:12px;font-size:11px;color:#7080b0;">All prize pool figures are based on 2025 Spring Racing Carnival results. Final 2026 scoring will use confirmed Racing Australia prizemoney data once the carnival concludes.</p>
+          </div>
+        </div>
+
+        <div class="rules-card rules-card-full">
+          <div class="rules-card-header">🔄 Stable Transfers — Horses Only</div>
+          <div class="rules-card-body">
+            <div class="rules-row"><span class="rules-icon">🐎</span><div><strong>One Horse Transfer Per Week</strong><div class="rules-sub">Once the carnival is underway, you may swap out one horse from your stable each week. Transfers open after each race day and close at <strong>5:00 PM AEDT on the Friday</strong> before that week's feature race day.</div></div></div>
+            <div class="rules-row"><span class="rules-icon">💰</span><div><strong>Cap Allocation</strong><div class="rules-sub">Horses have no preset price, so the incoming horse simply inherits the cap you had allocated to the outgoing horse — your total cap spend doesn't change on a transfer.</div></div></div>
+            <div class="rules-row"><span class="rules-icon">⭐</span><div><strong>Captain Change is Free</strong><div class="rules-sub">Changing your Captain does not count as your weekly transfer. You can swap your Captain and still make a horse transfer in the same week — they are independent actions, both subject to the Friday 5pm deadline.</div></div></div>
+            <div class="rules-row"><span class="rules-icon">⏩</span><div><strong>Unused Transfers Don't Roll Over</strong><div class="rules-sub">If you don't use your weekly horse transfer, it lapses — you cannot bank transfers and use two in a later week.</div></div></div>
+            <div class="rules-row"><span class="rules-icon">📋</span><div><strong>Transfer History</strong><div class="rules-sub">All transfers are logged in the Stable Transfer tab so you can track every change made to your stable across the season.</div></div></div>
+            <div class="rules-callout" style="margin-top:4px">
+              <div class="rules-callout-example">Example: You transfer out a horse you paid <strong>$14</strong> for at auction. The horse you bring in inherits that <strong>$14</strong> allocation — your overall cap spend stays the same.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="rules-card rules-card-full">
+          <div class="rules-card-header">🔒 What's Locked vs. What Can Change</div>
+          <div class="rules-card-body">
+            <div style="overflow-x:auto;">
+              <table style="width:100%;border-collapse:collapse;font-size:12px;">
+                <thead>
+                  <tr style="background:#1A1F5E;color:#FFD6EC;">
+                    <th style="padding:9px 14px;text-align:left;font-weight:800;letter-spacing:0.3px;">Selection</th>
+                    <th style="padding:9px 14px;text-align:center;font-weight:800;">Before Season Lock</th>
+                    <th style="padding:9px 14px;text-align:center;font-weight:800;">During Carnival</th>
+                    <th style="padding:9px 14px;text-align:left;font-weight:800;">Notes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style="border-bottom:1px solid #FFF0F8;">
+                    <td style="padding:10px 14px;font-weight:700;color:#1A1F5E;">⭐ Captain</td>
+                    <td style="padding:10px 14px;text-align:center;color:#2a9a50;font-weight:700;">✓ Can change</td>
+                    <td style="padding:10px 14px;text-align:center;color:#2a9a50;font-weight:700;">✓ Weekly</td>
+                    <td style="padding:10px 14px;color:#7080b0;">Change before each week's Friday 5pm deadline</td>
+                  </tr>
+                  <tr style="border-bottom:1px solid #FFF0F8;background:#FFF8FC;">
+                    <td style="padding:10px 14px;font-weight:700;color:#1A1F5E;">🐎 Horses 2–10</td>
+                    <td style="padding:10px 14px;text-align:center;color:#2a9a50;font-weight:700;">✓ Can change</td>
+                    <td style="padding:10px 14px;text-align:center;color:#2a9a50;font-weight:700;">✓ Can transfer</td>
+                    <td style="padding:10px 14px;color:#7080b0;">One per week, salary cap must balance</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+<div class="page" id="page-transfer">
+  <div class="transfer-outer">
+    <div class="transfer-container">
+
+      <div class="transfer-hero">
+        <div class="transfer-hero-icon">🔄</div>
+        <div>
+          <div class="transfer-hero-title">Stable Transfer</div>
+          <div class="transfer-hero-sub">Swap one <strong style="color:#FFD6EC;">horse</strong> per week, prior to that week's Friday 5pm AEDT deadline · Salary cap always applies</div>
+        </div>
+        <div class="transfer-hero-right">
+          <div class="transfer-allowance" id="transferAllowanceDisplay">1</div>
+          <div class="transfer-allowance-label">Trade Available</div>
+        </div>
+      </div>
+
+      <!-- Current week bar -->
+      <div class="transfer-week-bar">
+        <span class="week-pill" id="currentWeekPill">Week 1</span>
+        <span class="week-deadline">Transfer deadline: <strong id="currentDeadlineDisplay">—</strong></span>
+        <div class="week-status">
+          <div class="week-status-dot" id="weekStatusDot"></div>
+          <span class="week-status-text" id="weekStatusText"></span>
+        </div>
+      </div>
+
+      <!-- Main transfer layout: current stable + replacement pool -->
+      <div class="transfer-layout">
+
+        <!-- LEFT: current stable -->
+        <div class="transfer-panel">
+          <div class="transfer-panel-header out">
+            ⬆️ Step 1 — Select horse to transfer OUT
+          </div>
+          <div class="transfer-panel-body">
+            <div id="transferCurrentStable" class="current-stable-list"></div>
+          </div>
+        </div>
+
+        <!-- RIGHT: replacement pool -->
+        <div class="transfer-panel">
+          <div class="transfer-panel-header in">
+            ⬇️ Step 2 — Select replacement horse to transfer IN
+          </div>
+          <div class="transfer-panel-body">
+            <div id="transferInPanel">
+              <div class="transfer-empty">
+                <div class="transfer-empty-icon">👆</div>
+                Select a horse to transfer out first
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Confirm strip -->
+      <div class="transfer-confirm-strip" id="transferConfirmStrip" style="display:none">
+        <span class="confirm-arrow">🔄</span>
+        <div class="confirm-players">
+          <div class="confirm-chip out" id="confirmChipOut">—</div>
+          <span style="color:#E8007D;font-weight:900;font-size:18px;">→</span>
+          <div class="confirm-chip in" id="confirmChipIn">—</div>
+        </div>
+        <span class="confirm-budget-note" id="confirmBudgetNote"></span>
+        <button class="confirm-btn" id="confirmTransferBtn" onclick="confirmTransfer()">Confirm Transfer</button>
+      </div>
+
+      <!-- Transfer history log -->
+      <div class="transfer-log">
+        <div class="transfer-log-title">Transfer History</div>
+        <div id="transferLogList">
+          <div class="transfer-empty" style="padding:20px">
+            <div class="transfer-empty-icon">📋</div>
+            No transfers made yet this season
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══ PAGE: JOIN A LEAGUE ══ -->
+<div class="page" id="page-joinleague">
+  <div class="league-outer">
+    <div class="league-container" id="leagueContainer"><!-- populated by renderLeaguePage() --></div>
+  </div>
+</div>
+
+<!-- ══ PAGE: MY STABLE — IN PLAY ══ -->
+<div class="page" id="page-inplay">
+  <div class="inplay-container" id="inplayContent"></div>
+</div>
+
+<!-- ══ PAGE: DATA IMPORT (ADMIN) ══ -->
+<div class="page" id="page-dataimport">
+  <div class="admin-outer">
+    <div class="admin-container">
+
+      <div class="admin-banner">
+        🗂️ <strong>Admin tool.</strong> This imports horse pool names, weekly acceptances, and results into the draftable pool and live scoring. Once real accounts exist, this page should be restricted to an admin role only — for now it's visible to any logged-in user.
+      </div>
+
+      <div class="admin-stat-row">
+        <div class="admin-stat-box"><div class="admin-stat-val" id="adminStatHorses">0</div><div class="admin-stat-label">Horses in pool</div></div>
+        <div class="admin-stat-box"><div class="admin-stat-val" id="adminStatRacing">0</div><div class="admin-stat-label">Set for this week</div></div>
+        <div class="admin-stat-box"><div class="admin-stat-val" id="adminStatEarning">0</div><div class="admin-stat-label">Horses with earnings</div></div>
+      </div>
+
+      <div class="admin-card">
+        <div class="admin-card-header">🐎 Horse Pool Import</div>
+        <div class="admin-card-sub">Upload a spreadsheet of horse names to add to the draftable pool — a <code>horse_name</code> (or just "horse") column is all that's required. Optional columns for <code>trainer</code>, <code>key_races</code>, <code>tags</code> (comma list, e.g. gr1,cup,mare) and <code>notes</code> will be used if present. This never removes or overwrites existing horses — only adds names it hasn't seen before.</div>
+        <div class="admin-file-row">
+          <input type="file" id="horsePoolFileInput" class="admin-file-input" accept=".xlsx,.xls,.csv" />
+          <button class="admin-import-btn" onclick="handleHorsePoolFile()">Import Horse Pool</button>
+        </div>
+        <div id="horsePoolImportResult"></div>
+      </div>
+
+      <div class="admin-card">
+        <div class="admin-card-header">📋 Weekly Acceptances Import</div>
+        <div class="admin-card-sub">Upload the acceptances export (date, venue, race number, horse name). This replaces "this week's" racing list and auto-adds any horse name not already in the pool. Horses have no preset price — every horse opens the auction at $1 and the market sets the value.</div>
+        <div class="admin-file-row">
+          <input type="file" id="acceptancesFileInput" class="admin-file-input" accept=".xlsx,.xls,.csv" />
+          <button class="admin-import-btn" onclick="handleAcceptancesFile()">Import Acceptances</button>
+        </div>
+        <div id="acceptancesImportResult"></div>
+      </div>
+
+      <div class="admin-card">
+        <div class="admin-card-header">🏆 Cumulative Prizemoney Import</div>
+        <div class="admin-card-sub">Same layout as acceptances, plus a prizemoney column (name it anything containing "prize", e.g. <code>prizemoney_won</code>). This should be each horse's <strong>running season-to-date total</strong>, not just fresh winnings — importing a later export <strong>replaces</strong> the stored figure, so it's always safe to re-import the latest full cumulative file.</div>
+        <div class="admin-file-row">
+          <input type="file" id="resultsFileInput" class="admin-file-input" accept=".xlsx,.xls,.csv" />
+          <button class="admin-import-btn" onclick="handleResultsFile()">Import Results</button>
+        </div>
+        <div id="resultsImportResult"></div>
+      </div>
+
+      <div class="admin-card">
+        <div class="admin-card-header">⚠️ Reset Imported Data</div>
+        <div class="admin-card-sub">Clears every horse, this-week race, and earnings total added via import from this browser — the original built-in horse list is untouched. Useful for testing.</div>
+        <span class="admin-reset-link" onclick="resetImportedData()">↺ Clear all imported data</span>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="branding-strip"><span>Spring Racing Carnival SuperStable</span> · Fantasy Horse Racing Game · 2026</div>
+
+</div><!-- end appShell -->
+
+<script>
+const BUDGET = 100;
+const SLOTS  = { horses: 10 }; // 10 horses, no bench
+
+// ── 2026 LIVE SRC EARNINGS ──
+// All $0 until the carnival begins. Update these as race results come in.
+// Key = player id, value = prizemoney earned in 2026 SRC to date.
+const liveEarnings2026 = {}; // e.g. { 'h001': 3500000, 'j1': 350000 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PLAYER DATA — the horse pool starts empty. Populate it via the Data Import
+// (Admin) page: Horse Pool Import (bulk names), or the Weekly Acceptances /
+// Results importers, which both auto-add any horse name they haven't seen
+// before. See ensureHorseExists() below for the object shape a horse gets.
+// ─────────────────────────────────────────────────────────────────────────────
+const players = {
+  horses: []
+};
+
+let activeTab  = 'horses';
+let activeSort = 'price';
+let selected      = { horses: [] };
+let captainId     = null; // active captain
+let viceCaptainId = null; // vice captain (backup if captain scratched)
+let paidPrices    = {};   // horseId -> $ actually paid at auction (horses have no preset price)
+
+// ═══════════════════════════════════════════════════════════════
+// LOGIN / ACCOUNTS — local preview only (browser-stored, not cross-device)
+// ═══════════════════════════════════════════════════════════════
+let currentUser            = null; // lowercase username key, used for storage
+let currentUserDisplayName = null;
+let currentUserLeagueCode  = null; // league this user belongs to, if any
+let importedNewHorses      = []; // horses auto-created by an import, kept for persistence
+
+function getUsers() {
+  try { return JSON.parse(localStorage.getItem('srcUsers') || '{}'); } catch(e) { return {}; }
+}
+function saveUsers(u) { localStorage.setItem('srcUsers', JSON.stringify(u)); }
+
+function switchAuthTab(tab) {
+  document.getElementById('atab-signin').className = 'join-tab' + (tab === 'signin' ? ' active' : '');
+  document.getElementById('atab-join').className   = 'join-tab' + (tab === 'join'   ? ' active' : '');
+  document.getElementById('aform-signin').style.display = tab === 'signin' ? '' : 'none';
+  document.getElementById('aform-join').style.display   = tab === 'join'   ? '' : 'none';
+}
+
+function handleSignIn() {
+  const username = document.getElementById('authSigninUsername').value.trim();
+  const password = document.getElementById('authSigninPassword').value;
+  if (!username || !password) { alert('Enter your username and password.'); return; }
+  const key   = username.toLowerCase();
+  const users = getUsers();
+  const acct  = users[key];
+  if (!acct || acct.password !== password) { alert("We couldn't find that account, or the password is incorrect."); return; }
+  loginAs(key, acct.displayName);
+}
+
+function handleJoin() {
+  const username = document.getElementById('authJoinUsername').value.trim();
+  const email    = document.getElementById('authJoinEmail').value.trim();
+  const password = document.getElementById('authJoinPassword').value;
+  if (!username || !password) { alert('Choose a username and password.'); return; }
+  const key   = username.toLowerCase();
+  const users = getUsers();
+  if (users[key]) { alert('That username is already taken in this browser — try signing in instead.'); return; }
+  users[key] = { displayName: username, email, password, createdAt: new Date().toISOString() };
+  saveUsers(users);
+  loginAs(key, username);
+}
+
+function loginAs(usernameKey, displayName) {
+  currentUser            = usernameKey;
+  currentUserDisplayName = displayName || usernameKey;
+  const acct = getUsers()[usernameKey];
+  currentUserLeagueCode  = (acct && acct.leagueCode) || null;
+  localStorage.setItem('srcCurrentUser', usernameKey);
+  loadUserStable();
+  document.getElementById('authGate').style.display = 'none';
+  document.getElementById('appShell').style.display = '';
+  const badge = document.getElementById('userBadgeName');
+  if (badge) badge.textContent = currentUserDisplayName;
+  showPage('myteam');
+  refresh();
+}
+
+function logout() {
+  if (!confirm('Log out of Spring Racing Carnival SuperStable?')) return;
+  localStorage.removeItem('srcCurrentUser');
+  currentUser = null;
+  currentUserDisplayName = null;
+  currentUserLeagueCode = null;
+  selected = { horses: [] };
+  captainId = null;
+  viceCaptainId = null;
+  paidPrices = {};
+  resetDraft();
+  document.getElementById('appShell').style.display = 'none';
+  document.getElementById('authGate').style.display = '';
+  document.getElementById('authSigninPassword').value = '';
+}
+
+function loadUserStable() {
+  const raw = localStorage.getItem('srcSuperStable_' + currentUser);
+  if (raw) {
+    try {
+      const data = JSON.parse(raw);
+      selected      = data.selected      || { horses: [] };
+      captainId     = data.captainId     || null;
+      viceCaptainId = data.viceCaptainId || null;
+      paidPrices    = data.paidPrices    || {};
+      return;
+    } catch(e) { /* fall through to reset */ }
+  }
+  selected = { horses: [] }; captainId = null; viceCaptainId = null; paidPrices = {};
+}
+
+function initAuth() {
+  const saved = localStorage.getItem('srcCurrentUser');
+  if (saved) {
+    const users = getUsers();
+    if (users[saved]) { loginAs(saved, users[saved].displayName); return; }
+  }
+  document.getElementById('authGate').style.display = '';
+  document.getElementById('appShell').style.display = 'none';
+}
+
+function fmt(n) {
+  if (n >= 1000000) return '$' + (n/1000000).toFixed(2) + 'M';
+  if (n >= 1000) return '$' + (n/1000).toFixed(0) + 'K';
+  return '$' + n.toLocaleString();
+}
+
+function getSpent() {
+  let s = 0;
+  selected.horses.forEach(id => { s += paidPrices[id] || 0; });
+  return s;
+}
+
+function removePlayer(cat, id, e) {
+  if(e) e.stopPropagation();
+  if (cat !== 'horses') return;
+  selected.horses = selected.horses.filter(x => x !== id);
+  delete paidPrices[id];
+  if (captainId === id) {
+    captainId = selected.horses.length > 0 ? selected.horses[0] : null;
+  }
+  if (viceCaptainId === id) viceCaptainId = null;
+  refresh();
+}
+
+let dragSourceId   = null;
+let dragSourceSlot = null;
+
+function onSlotDragStart(e) {
+  dragSourceId   = e.currentTarget.dataset.id;
+  dragSourceSlot = parseInt(e.currentTarget.dataset.slot);
+  e.dataTransfer.effectAllowed = 'move';
+}
+
+function onSlotDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  e.currentTarget.classList.add('drag-over');
+}
+
+function onSlotDragLeave(e) {
+  e.currentTarget.classList.remove('drag-over');
+}
+
+function onSlotDrop(e, targetSlot) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  if (dragSourceId === null) return;
+
+  // Reorder / role swap between two of your own horse slots (captain, vice captain, etc.)
+  const others   = selected.horses.filter(id => id !== captainId && id !== viceCaptainId);
+  const slots    = [captainId, viceCaptainId, ...others];
+  const targetId = slots[targetSlot] || null;
+
+  if (targetSlot === 0) {
+    const oldCap = captainId;
+    captainId = dragSourceId;
+    if (viceCaptainId === dragSourceId) viceCaptainId = oldCap;
+  } else if (targetSlot === 1) {
+    const oldVC = viceCaptainId;
+    viceCaptainId = dragSourceId;
+    if (captainId === dragSourceId) captainId = oldVC;
+  }
+
+  dragSourceId = null;
+  refresh();
+}
+
+function saveStable() {
+  if (selected.horses.length < SLOTS.horses) {
+    alert(`Your stable isn't complete yet — you need ${SLOTS.horses} horses. Head to the Draft Room to finish building your stable.`);
+    return;
+  }
+  if (!captainId) {
+    alert('Please set a Captain before saving your stable.');
+    return;
+  }
+  const saveData = { selected, captainId, viceCaptainId, paidPrices, savedAt: new Date().toISOString() };
+  localStorage.setItem('srcSuperStable_' + currentUser, JSON.stringify(saveData));
+  const btn = document.getElementById('saveStableBtn');
+  if (!btn) return;
+  btn.textContent = '✓ Stable Saved';
+  btn.classList.add('saved');
+  btn.disabled = true;
+  setTimeout(() => {
+    btn.textContent = '💾 Save My Stable';
+    btn.classList.remove('saved');
+    btn.disabled = false;
+  }, 3000);
+}
+
+function refresh() {
+  const spent = getSpent();
+  const rem   = BUDGET - spent;
+  const pct   = rem / BUDGET * 100;
+  const budgetDisplay = document.getElementById('budgetDisplay');
+  if (budgetDisplay) budgetDisplay.textContent = fmt(spent);
+  const bar = document.getElementById('budgetBar');
+  if (bar) {
+    bar.style.width = (100 - pct) + '%';
+    bar.className   = 'budget-bar-fill' + (pct < 15 ? ' danger' : '');
+  }
+
+  renderMyStablePage();
+}
+
+// ── MY STABLE — read-only roster view (built via the Draft Room) ──
+function renderMyStablePage() {
+  const container = document.getElementById('myteamContainer');
+  if (!container) return;
+
+  if (!getMyLeague()) {
+    container.innerHTML = `
+      <div class="inplay-no-stable">
+        <div class="inplay-no-stable-icon">🏆</div>
+        <div class="inplay-no-stable-title">Join A League First</div>
+        <div class="inplay-no-stable-sub">Your stable is built through a live auction draft with your league. Create a league or join one with a code to get started.</div>
+        <button class="myteam-cta-btn" onclick="showPage('joinleague')">🏆 Go To Join A League</button>
+      </div>`;
+    return;
+  }
+
+  if (!selected.horses.length) {
+    const league = getMyLeague();
+    const scheduled = league.scheduledDraftAt;
+    const scheduleNote = scheduled
+      ? `Draft scheduled for ${fmtLeagueDateTime(scheduled)}.`
+      : (isLeagueManager(league) ? "You haven't scheduled a draft time yet." : `Waiting for ${league.managerUsername === currentUser ? 'you' : 'your league manager'} to schedule the draft.`);
+    container.innerHTML = `
+      <div class="inplay-no-stable">
+        <div class="inplay-no-stable-icon">🔨</div>
+        <div class="inplay-no-stable-title">No Stable Yet</div>
+        <div class="inplay-no-stable-sub">Your stable is built entirely through the live auction draft with "${league.name}" — head to the Draft Room, win your ${SLOTS.horses} horses, then come back here to set your Captain. ${scheduleNote}</div>
+        <button class="myteam-cta-btn" onclick="showPage('draft')">🔨 Go To Draft Room</button>
+      </div>`;
+    return;
+  }
+
+  // Build ordered list: captain first, VC second, rest after
+  const others = selected.horses.filter(id => id !== captainId && id !== viceCaptainId);
+  const slots = [captainId, viceCaptainId, ...others];
+  while (slots.length < SLOTS.horses) slots.push(null);
+
+  let horseHtml = '';
+  for (let i = 0; i < SLOTS.horses; i++) {
+    const id = slots[i];
+    const p  = id ? players.horses.find(x=>x.id===id) : null;
+    const isCap = i === 0;
+    const isVC  = i === 1;
+
+    const slotRole  = isCap ? 'cap' : isVC ? 'vc' : 'open';
+    const slotLabel = isCap ? 'C' : isVC ? 'VC' : (i + 1);
+    const slotClass = isCap ? 'captain' : isVC ? 'vc' : '';
+
+    if (p) {
+      horseHtml += `<div class="team-slot filled ${slotClass}"
+          draggable="true"
+          data-id="${id}"
+          data-slot="${i}"
+          ondragstart="onSlotDragStart(event)"
+          ondragover="onSlotDragOver(event)"
+          ondragleave="onSlotDragLeave(event)"
+          ondrop="onSlotDrop(event,${i})">
+        <span class="slot-role-label ${slotRole}">${slotLabel}</span>
+        <div class="slot-avatar horse">${p.emoji}</div>
+        <div class="slot-info">
+          <div class="slot-name">${p.name}</div>
+          <div class="slot-meta">${isCap ? fmt(Math.round((liveEarnings2026[id]||0)*2))+' (Captain ×2)' : fmt(liveEarnings2026[id]||0)+' earned'} · ${fmt(paidPrices[id]||0)} paid</div>
+        </div>
+      </div>`;
+    } else {
+      horseHtml += `<div class="team-slot ${slotClass}"
+          data-slot="${i}"
+          ondragover="onSlotDragOver(event)"
+          ondragleave="onSlotDragLeave(event)"
+          ondrop="onSlotDrop(event,${i})">
+        <span class="slot-role-label ${slotRole}">${slotLabel}</span>
+        <div class="slot-avatar empty">🐎</div>
+        <span class="slot-empty-text">${isCap ? 'Drag here to set Captain' : isVC ? 'Drag here to set Vice Captain' : 'Empty slot'}</span>
+      </div>`;
+    }
+  }
+
+  container.innerHTML = `
+    <div class="panel-title" style="flex-direction:column;align-items:flex-start;gap:6px;">
+      <span>My Stable</span>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span class="slot-count" id="slotCountHorses">${selected.horses.length} / ${SLOTS.horses}</span>
+        <span style="font-size:10px;color:#c070a0;font-weight:600;">horses</span>
+      </div>
+    </div>
+    <div class="section-header">Your Stable — drag to set Captain / Vice Captain</div>
+    <div id="horseSlots">${horseHtml}</div>
+    <button class="save-stable-btn" id="saveStableBtn" onclick="saveStable()">💾 Save My Stable</button>
+  `;
+
+  const saveBtn = document.getElementById('saveStableBtn');
+  if (saveBtn) saveBtn.disabled = selected.horses.length !== SLOTS.horses;
+}
+
+
+// ── PAGE NAVIGATION ──
+function showPage(page) {
+  ['myteam','draft','transfer','leaderboard','rules','joinleague','inplay','dataimport'].forEach(p => {
+    document.getElementById('page-' + p).classList.remove('active');
+    document.getElementById('nav-' + p).classList.remove('active');
+  });
+  document.getElementById('page-' + page).classList.add('active');
+  document.getElementById('nav-' + page).classList.add('active');
+  if (page === 'leaderboard') renderLeaderboard();
+  if (page === 'transfer')    renderTransferPage();
+  if (page === 'inplay')      renderInPlay();
+  if (page === 'draft')       renderDraftPage();
+  if (page === 'dataimport')  renderAdminStats();
+  if (page === 'joinleague')  renderLeaguePage();
+}
+
+// ── IN PLAY — DUMMY RACE WEEK DATA ──
+// Keyed by horse id — horses listed here have a race this week
+const thisWeekRaces = {
+  // Populated via Data Import (Admin) — { venue, raceNumber, date }
+};
+
+function renderInPlay() {
+  const container = document.getElementById('inplayContent');
+  const activeHorses = selected.horses;
+
+  // No stable saved yet
+  if (activeHorses.length === 0) {
+    container.innerHTML = `
+      <div class="inplay-no-stable">
+        <div class="inplay-no-stable-icon">🏇</div>
+        <div class="inplay-no-stable-title">No Stable Selected Yet</div>
+        <div class="inplay-no-stable-sub">Your stable is built via the live auction draft — win your 10 horses, then save your stable to see your acceptances here.</div>
+      </div>`;
+    return;
+  }
+
+  // Horses racing this week vs not
+  const racingIds = activeHorses.filter(id => thisWeekRaces[id]);
+  const naIds     = activeHorses.filter(id => !thisWeekRaces[id]);
+
+  const horseRow = (id, raceData) => {
+    const p      = players.horses.find(x=>x.id===id);
+    const isCap  = id === captainId;
+    const isVC   = id === viceCaptainId;
+    const cardClass = isCap ? 'captain-card' : raceData ? 'racing' : 'na-card';
+    return `
+      <div class="inplay-card ${cardClass}">
+        <div class="inplay-avatar${raceData ? '' : ' na'}">🐎</div>
+        <div>
+          <div class="inplay-horse-name">${p.name}${isCap?'<span class="inplay-cap-badge">C</span>':isVC?'<span class="inplay-vc-badge">VC</span>':''}</div>
+          <div class="inplay-horse-meta">${p.meta}</div>
+        </div>
+        <div class="inplay-race-col">
+          ${raceData ? `<div class="inplay-race-name">${raceData.venue || '—'}</div>` : `<div class="inplay-race-na">No race this week</div>`}
+        </div>
+        <div class="inplay-jockey-col">
+          ${raceData && raceData.raceNumber !== undefined && raceData.raceNumber !== '' ? `<div>Race ${raceData.raceNumber}</div>` : `<div style="color:#b0a0c0;font-style:italic">—</div>`}
+        </div>
+        <div class="inplay-odds-col">
+          ${raceData ? `<div style="font-size:11px;color:#7080b0;">${raceData.date || ''}</div>` : `<div class="inplay-odds-na">N/A</div>`}
+        </div>
+      </div>`;
+  };
+
+  container.innerHTML = `
+    <div class="inplay-hero" style="margin-bottom:20px;">
+      <div class="inplay-hero-dot"></div>
+      <div class="inplay-hero-info">
+        <div class="inplay-hero-label">2026 SRC · Season in Progress</div>
+        <div class="inplay-hero-title">My Stable — Acceptances</div>
+      </div>
+    </div>
+
+    <div class="inplay-section-header">
+      🏁 Racing This Week
+      <span class="inplay-section-count">${racingIds.length} horses</span>
+    </div>
+    <div style="display:grid;grid-template-columns:44px 1fr 140px 70px 110px;gap:12px;padding:0 16px 6px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#9080b0;">
+      <div></div><div></div><div>Venue</div><div>Race #</div><div>Date</div>
+    </div>
+    <div class="inplay-grid">
+      ${racingIds.length > 0 ? racingIds.map(id => horseRow(id, thisWeekRaces[id])).join('') : '<div style="text-align:center;padding:20px;color:#c070a0;font-size:13px;">None of your horses are racing this week.</div>'}
+    </div>
+
+    <div class="inplay-section-header">
+      Not Racing This Week
+      <span class="inplay-section-count" style="background:#9080b0">${naIds.length} horses</span>
+    </div>
+    <div class="inplay-grid">
+      ${naIds.map(id => horseRow(id, null)).join('')}
+    </div>
+  `;
+}
+
+const lbData = [
+  { username:'CupKingMelbourne',   team:'Via & Half Team',       topHorse:'Half Yours',         earnings:7480000, change:0,  avatar:'🏆', color:'#D4A843' },
+  { username:'SpringCarnivalQueen', team:'Waller\'s Army',         topHorse:'Autumn Glow',        earnings:6920000, change:1,  avatar:'👑', color:'#9090a0' },
+  { username:'FlemingtonFanatic',   team:'The Delius Drive',       topHorse:'Sir Delius',         earnings:5210000, change:-1, avatar:'🐎', color:'#b07040' },
+  { username:'trackside_tom',       team:'Tom\'s Trifecta',        topHorse:'Autumn Boy',         earnings:4650000, change:-1, avatar:'⏱️', color:'#4a7a6a' },
+  { username:'MelbCupDreamer',      team:'Cup Carnival Crew',      topHorse:'Aeliana',            earnings:4310000, change:0,  avatar:'✨', color:'#6a4aaa' },
+  { username:'flemington_fred',     team:'Fred\'s Flemington XI',  topHorse:'Half Yours',         earnings:4180000, change:3,  avatar:'🍺', color:'#8a6a4a' },
+  { username:'RacingVicFan',        team:'Victorian Stars',        topHorse:'Sir Delius',         earnings:3970000, change:-2, avatar:'⭐', color:'#4a6a9a' },
+  { username:'TreasureHunter99',    team:'The Moment Team',        topHorse:'Sheza Alibi',        earnings:3740000, change:1,  avatar:'💎', color:'#8a4a6a' },
+  { username:'CaulfieldCarl',       team:'Caulfield Crusaders',    topHorse:'Green Spaces',       earnings:3590000, change:-1, avatar:'🎯', color:'#5a8a5a' },
+  { username:'springracing_sue',    team:'Sue\'s Spring Squad',    topHorse:'Autumn Glow',        earnings:3210000, change:0,  avatar:'🌷', color:'#aa4a7a' },
+  { username:'MooneeValleyMike',    team:'Valley Vanguard',        topHorse:'Ceolwulf',           earnings:2980000, change:2,  avatar:'🌙', color:'#4a5aaa' },
+  { username:'GoldenBootPunter',    team:'The Golden Boot',        topHorse:'Aeliana',            earnings:2760000, change:-3, avatar:'👢', color:'#aa8a3a' },
+  { username:'DerbyDayDave',        team:'Dave\'s Derby XI',       topHorse:'Autumn Glow',        earnings:2540000, change:1,  avatar:'🎪', color:'#6a4a8a' },
+  { username:'longshot_linda',      team:'Linda\'s Longshots',     topHorse:'Zambardo',           earnings:1820000, change:-1, avatar:'🎲', color:'#8a6a8a' },
+];
+
+// Real score for the logged-in user — same formula as My Stable / In Play:
+// 100% of each active horse's live prizemoney, Captain doubled.
+function computeMyLeaderboardScore() {
+  let score = 0;
+  selected.horses.forEach(id => {
+    const e = liveEarnings2026[id] || 0;
+    score += id === captainId ? Math.round(e * 2) : e;
+  });
+  return score;
+}
+
+function renderLeaderboard() {
+  const posClass = r => r === 1 ? 'gold' : r === 2 ? 'silver' : r === 3 ? 'bronze' : '';
+
+  const captain = captainId ? players.horses.find(h => h.id === captainId) : null;
+  const meRow = {
+    username: currentUserDisplayName || 'You',
+    team: 'My Stable',
+    topHorse: captain ? captain.name : '—',
+    earnings: computeMyLeaderboardScore(),
+    change: 0, // no history tracked yet for the real player
+    avatar: '🌸',
+    color: '#E8007D',
+    isMe: true
+  };
+
+  // Rank the real "You" score against the illustrative rival scores below —
+  // these rivals are placeholder data until real multiplayer leagues exist.
+  const ranked = [...lbData, meRow]
+    .slice()
+    .sort((a, b) => b.earnings - a.earnings)
+    .map((u, i) => ({ ...u, rank: i + 1 }));
+
+  const meRanked = ranked.find(u => u.isMe);
+  document.getElementById('lbHeroRank').textContent = '#' + meRanked.rank;
+  document.getElementById('lbHeroName').textContent = meRow.username;
+  document.getElementById('lbHeroPts').textContent  = fmt(meRow.earnings);
+
+  let html = '';
+  ranked.forEach(u => {
+    const chg = u.change > 0 ? `<span class="lb-change up">▲ ${u.change}</span>`
+              : u.change < 0 ? `<span class="lb-change dn">▼ ${Math.abs(u.change)}</span>`
+              : `<span class="lb-change eq">—</span>`;
+    html += `<div class="lb-row${u.isMe ? ' me' : ''}">
+      <div class="lb-pos ${u.isMe ? 'me-pos' : posClass(u.rank)}">${u.rank === 1 ? '🥇' : u.rank === 2 ? '🥈' : u.rank === 3 ? '🥉' : u.rank}</div>
+      <div class="lb-avatar" style="background:${u.color}22;color:${u.color};border:1.5px solid ${u.color}55">${u.avatar}</div>
+      <div class="lb-user-info">
+        <div class="lb-username${u.isMe ? ' me-label' : ''}">${u.username}</div>
+        <div class="lb-team-name">${u.team}</div>
+      </div>
+      <div class="lb-picks">
+        <span class="lb-pick-chip">🐎 ${u.topHorse || '—'}</span>
+      </div>
+      <div class="lb-score-col">
+        <div class="lb-pts">${fmt(u.earnings)}</div>
+      </div>
+      ${chg}
+    </div>`;
+  });
+  document.getElementById('lbRows').innerHTML = html;
+}
+
+function setLbRound(period) {
+  // period stored for future use when weekly scoring is live
+}
+
+// ── JOIN LEAGUE JS ──
+// ══════════════════════════════════════════════════════════════
+// STABLE TRANSFER ENGINE
+// ══════════════════════════════════════════════════════════════
+
+// SRC 2026 weekly schedule — each week has a deadline (Friday 5pm AEDT)
+// before which one transfer may be made. Dates are AEDT (UTC+11 in Oct/Nov).
+const TRANSFER_WEEKS = [
+  { week: 1, label: 'Week 1 — Memsie–Makybe Diva',          deadline: new Date('2026-09-04T07:00:00Z') }, // Fri 4 Sep 5pm AEDT
+  { week: 2, label: 'Week 2 — Sir Rupert Clarke–Underwood',  deadline: new Date('2026-09-11T07:00:00Z') },
+  { week: 3, label: 'Week 3 — Turnbull Stakes',              deadline: new Date('2026-09-18T07:00:00Z') },
+  { week: 4, label: 'Week 4 — Caulfield Guineas–Toorak',     deadline: new Date('2026-09-25T07:00:00Z') },
+  { week: 5, label: 'Week 5 — Caulfield Cup',                deadline: new Date('2026-10-09T07:00:00Z') },
+  { week: 6, label: 'Week 6 — Cox Plate at Flemington',      deadline: new Date('2026-10-23T07:00:00Z') },
+  { week: 7, label: 'Week 7 — Melbourne Cup Carnival',       deadline: new Date('2026-10-30T07:00:00Z') },
+  { week: 8, label: 'Week 8 — Derby–Cup Day',                deadline: new Date('2026-11-06T07:00:00Z') },
+  { week: 9, label: 'Week 9 — C.F. Orr Stakes Day',           deadline: new Date('2026-11-13T07:00:00Z') },
+];
+
+// Transfer state
+let transferLog      = [];     // array of { week, weekLabel, outId, outCat, inId, inCat, date }
+let transferOutId    = null;   // id of player being transferred out
+let transferOutCat   = null;   // category of player being transferred out
+let transferInId     = null;   // id of replacement
+let transferInCat    = null;
+
+// Determine current week info
+function getCurrentWeek() {
+  const now = new Date();
+  // For demo purposes, we'll simulate that we're in the live season.
+  // The current week is the first one whose deadline hasn't passed yet.
+  // If all have passed, season is over.
+  for (const w of TRANSFER_WEEKS) {
+    if (now < w.deadline) return w;
+  }
+  return null; // season closed
+}
+
+function hasUsedTransferThisWeek() {
+  const cw = getCurrentWeek();
+  if (!cw) return true;
+  return transferLog.some(t => t.week === cw.week);
+}
+
+function canTransfer() {
+  const activeHorses = selected.horses;
+  if (activeHorses.length < 10) return false; // need a complete 10-horse active lineup
+  const cw = getCurrentWeek();
+  if (!cw) return false;
+  if (hasUsedTransferThisWeek()) return false;
+  return true;
+}
+
+function fmtDeadline(date) {
+  return date.toLocaleString('en-AU', {
+    weekday: 'short', day: 'numeric', month: 'short',
+    hour: '2-digit', minute: '2-digit', timeZoneName: 'short',
+    timeZone: 'Australia/Melbourne'
+  });
+}
+
+// ── RENDER TRANSFER PAGE ──
+function renderTransferPage() {
+  const cw        = getCurrentWeek();
+  const canTrade  = canTransfer();
+  const activeHorses = selected.horses;
+  const stableFull = activeHorses.length === 10;
+
+  // Hero allowance indicator
+  const allowEl = document.getElementById('transferAllowanceDisplay');
+  allowEl.textContent  = canTrade ? '1' : '0';
+  allowEl.className    = 'transfer-allowance' + (canTrade ? '' : ' used');
+
+  // Week bar
+  if (cw) {
+    document.getElementById('currentWeekPill').textContent       = 'Week ' + cw.week;
+    document.getElementById('currentDeadlineDisplay').textContent = fmtDeadline(cw.deadline);
+    const isOpen = canTrade;
+    document.getElementById('weekStatusDot').className  = 'week-status-dot' + (isOpen ? '' : ' closed');
+    document.getElementById('weekStatusText').className = 'week-status-text' + (isOpen ? '' : ' closed');
+    document.getElementById('weekStatusText').textContent = isOpen ? 'Transfer window open' :
+      (hasUsedTransferThisWeek() ? 'Transfer used this week' : 'Transfer window closed');
+  } else {
+    document.getElementById('currentWeekPill').textContent       = 'Season Ended';
+    document.getElementById('currentDeadlineDisplay').textContent = 'Season complete';
+    document.getElementById('weekStatusDot').className  = 'week-status-dot closed';
+    document.getElementById('weekStatusText').className = 'week-status-text closed';
+    document.getElementById('weekStatusText').textContent = 'No further transfers';
+  }
+
+  renderCurrentStable(canTrade, stableFull);
+  renderInPanel();
+  renderConfirmStrip();
+  renderTransferLog();
+}
+
+// ── RENDER CURRENT STABLE (left panel) ──
+function renderCurrentStable(canTrade, stableFull) {
+  const container = document.getElementById('transferCurrentStable');
+  if (!stableFull) {
+    container.innerHTML = `<div class="transfer-empty">
+      <div class="transfer-empty-icon">🔨</div>
+      Complete your 10-horse active lineup in the Draft Room first
+    </div>`;
+    return;
+  }
+
+  let html = '';
+
+  // ── HORSES (transferable) ──
+  html += `<div style="font-size:9px;text-transform:uppercase;letter-spacing:2px;color:#E8007D;font-weight:800;margin:0 0 5px;padding-bottom:4px;border-bottom:1px solid #FFD6EC;">🐎 Horses — click to transfer out</div>`;
+  selected.horses.forEach((id, idx) => {
+    const p     = players.horses.find(x => x.id === id);
+    if (!p) return;
+    const isCap = id === captainId;
+    const isOut = transferOutId === id && transferOutCat === 'horses';
+    const locked = !canTrade;
+    html += `<div class="stable-player-row ${isOut ? 'selecting-out' : ''} ${locked ? 'locked' : ''}"
+                  onclick="${locked ? '' : `selectTransferOut('horses','${id}')`}">
+      <div class="spr-avatar horse">${p.emoji}</div>
+      <div class="spr-info">
+        <div class="spr-name">${p.name}${isCap ? ' ⭐' : ''}</div>
+        <div class="spr-meta">Horse · paid ${fmt(paidPrices[id]||0)}</div>
+      </div>
+      ${isOut ? '<span class="out-badge">OUT</span>' : ''}
+      ${isCap && !isOut ? '<span class="captain-lock">Captain</span>' : ''}
+    </div>`;
+  });
+
+  container.innerHTML = html;
+}
+
+// ── RENDER IN PANEL (right panel — replacement pool) ──
+// Horses already drafted by anyone else in your league — checked against every
+// league mate's saved stable in this browser. Works today for same-browser
+// multi-account testing; the same function keeps working unmodified once
+// account data is shared across devices via Supabase.
+function getHorsesOwnedByLeagueMates() {
+  const league = getMyLeague();
+  const owned = new Set();
+  if (!league) return owned;
+  league.members.forEach(m => {
+    if (m === currentUser) return;
+    const raw = localStorage.getItem('srcSuperStable_' + m);
+    if (!raw) return;
+    try {
+      const data = JSON.parse(raw);
+      (data.selected?.horses || []).forEach(id => owned.add(id));
+    } catch(e) { /* ignore a corrupt record */ }
+  });
+  return owned;
+}
+
+function renderInPanel() {
+  const container = document.getElementById('transferInPanel');
+  if (!transferOutId) {
+    container.innerHTML = `<div class="transfer-empty">
+      <div class="transfer-empty-icon">👆</div>
+      Select a horse to transfer out first
+    </div>`;
+    return;
+  }
+
+  // Build pool: same category, not already in YOUR stable, and not already
+  // drafted by anyone else in your league.
+  const currentIds  = selected[transferOutCat];
+  const leagueOwned = getHorsesOwnedByLeagueMates();
+  const pool = players[transferOutCat]
+    .filter(p => !currentIds.includes(p.id) && !leagueOwned.has(p.id))
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  const cls = 'horse';
+
+  let html = `<input class="replacement-search" id="replacementSearch"
+    placeholder="Search ${transferOutCat}…" oninput="filterReplacements()" />
+  <div class="replacement-list" id="replacementList">`;
+
+  pool.forEach(p => {
+    const isIn = transferInId === p.id;
+    html += `<div class="replacement-row ${isIn ? 'selecting-in' : ''}"
+                  onclick="selectTransferIn('${transferOutCat}','${p.id}')">
+      <div class="spr-avatar ${cls}">${p.emoji}</div>
+      <div class="spr-info">
+        <div class="spr-name">${p.name}</div>
+        <div class="spr-meta">${fmt(liveEarnings2026[p.id]||0)} 2026 earnings</div>
+      </div>
+      ${isIn ? '<span class="in-badge">IN</span>' : ''}
+    </div>`;
+  });
+
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+// Filter replacement list by search
+function filterReplacements() {
+  const q   = document.getElementById('replacementSearch').value.toLowerCase();
+  const rows = document.querySelectorAll('#replacementList .replacement-row');
+  rows.forEach(row => {
+    const name = row.querySelector('.spr-name').textContent.toLowerCase();
+    row.style.display = name.includes(q) ? '' : 'none';
+  });
+}
+
+// ── SELECT TRANSFER OUT ──
+function selectTransferOut(cat, id) {
+  if (cat !== 'horses') return; // only horses can be transferred
+  if (!canTransfer()) return;
+  if (transferOutId === id && transferOutCat === cat) {
+    transferOutId  = null;
+    transferOutCat = null;
+    transferInId   = null;
+    transferInCat  = null;
+  } else {
+    transferOutId  = id;
+    transferOutCat = cat;
+    transferInId   = null;
+    transferInCat  = null;
+  }
+  renderCurrentStable(true, true);
+  renderInPanel();
+  renderConfirmStrip();
+}
+
+// ── SELECT TRANSFER IN ──
+function selectTransferIn(cat, id) {
+  if (transferInId === id && transferInCat === cat) {
+    transferInId  = null;
+    transferInCat = null;
+  } else {
+    transferInId  = id;
+    transferInCat = cat;
+  }
+  renderInPanel();
+  renderConfirmStrip();
+}
+
+// ── RENDER CONFIRM STRIP ──
+function renderConfirmStrip() {
+  const strip = document.getElementById('transferConfirmStrip');
+  if (!transferOutId || !transferInId) {
+    strip.style.display = 'none';
+    return;
+  }
+  strip.style.display = 'flex';
+
+  const outP = players[transferOutCat].find(x => x.id === transferOutId);
+  const inP  = players[transferInCat].find(x => x.id === transferInId);
+
+  document.getElementById('confirmChipOut').textContent = '⬆ ' + outP.name;
+  document.getElementById('confirmChipIn').textContent  = '⬇ ' + inP.name;
+
+  const budgetNote = document.getElementById('confirmBudgetNote');
+  budgetNote.textContent  = `${fmt(paidPrices[outP.id]||0)} paid carries over to ${inP.name}`;
+  budgetNote.className    = 'confirm-budget-note';
+
+  document.getElementById('confirmTransferBtn').disabled = false;
+}
+
+// ── CONFIRM TRANSFER ──
+function confirmTransfer() {
+  if (!transferOutId || !transferInId) return;
+  if (!canTransfer()) return;
+
+  const outP = players[transferOutCat].find(x => x.id === transferOutId);
+  const inP  = players[transferInCat].find(x => x.id === transferInId);
+
+  const cw = getCurrentWeek();
+
+  // Execute the swap in the selected arrays
+  const idx = selected[transferOutCat].indexOf(transferOutId);
+  if (idx > -1) selected[transferOutCat][idx] = transferInId;
+
+  // The incoming horse inherits the outgoing horse's cap allocation —
+  // there's no live bid for a horse outside the draft, so this keeps
+  // "cap spent" stable across a transfer rather than inventing a price.
+  paidPrices[transferInId] = paidPrices[transferOutId] || 0;
+  delete paidPrices[transferOutId];
+  if (captainId === transferOutId) captainId = transferInId;
+  if (viceCaptainId === transferOutId) viceCaptainId = transferInId;
+
+  // Log the transfer
+  transferLog.unshift({
+    week:      cw.week,
+    weekLabel: cw.label,
+    outId:     transferOutId,
+    outName:   outP.name,
+    outCat:    transferOutCat,
+    inId:      transferInId,
+    inName:    inP.name,
+    inCat:     transferInCat,
+    date:      new Date().toLocaleString('en-AU', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+  });
+
+  // Reset selection state
+  transferOutId  = null;
+  transferOutCat = null;
+  transferInId   = null;
+  transferInCat  = null;
+
+  // Update main stable scores too
+  refresh();
+
+  // Re-render transfer page
+  renderTransferPage();
+}
+
+// ── RENDER TRANSFER LOG ──
+function renderTransferLog() {
+  const container = document.getElementById('transferLogList');
+  if (!transferLog.length) {
+    container.innerHTML = `<div class="transfer-empty" style="padding:20px">
+      <div class="transfer-empty-icon">📋</div>
+      No transfers made yet this season
+    </div>`;
+    return;
+  }
+  container.innerHTML = transferLog.map(t => `
+    <div class="log-row">
+      <span class="log-week">Week ${t.week}</span>
+      <span class="log-out">⬆ ${t.outName}</span>
+      <span class="log-arrow">→</span>
+      <span class="log-in">⬇ ${t.inName}</span>
+      <span style="font-size:10px;color:#7080b0;">${t.outCat.slice(0,-1)}</span>
+      <span class="log-date">${t.date}</span>
+    </div>`).join('');
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// DRAFT ROOM — live auction draft engine
+// Reuses the players.horses catalogue above as the horse database.
+// ═══════════════════════════════════════════════════════════════
+
+const DRAFT_NOM_SECONDS = 20;   // shot clock to nominate a horse
+const DRAFT_BID_SECONDS = 10;   // resets on every new bid
+const DRAFT_MIN_RESERVE = 1; // $ held back per remaining empty slot
+
+const DRAFT_OPEN_SEATS_FALLBACK = 7; // used only if you're somehow not in a league
+
+let draftStatus       = 'idle'; // idle | nominating | bidding | complete
+let draftTeams        = [];
+let draftPool         = [];
+let draftNominatorIdx = 0;
+let draftLot          = null;   // { horseId, currentBid, currentBidderIdx, bids }
+let draftLog          = [];
+let draftNomTimer     = null;
+let draftBidTimer     = null;
+let draftNomTimeLeft  = 0;
+let draftBidTimeLeft  = 0;
+
+function draftSlotsTotal() { return SLOTS.horses; } // 13 — matches My Stable roster size
+
+function getOtherLeagueMembers() {
+  const league = getMyLeague();
+  if (!league) return null; // null = "no league", distinct from an empty array
+  const users = getUsers();
+  return league.members
+    .filter(m => m !== currentUser)
+    .map(m => ({ username: m, displayName: (users[m] && users[m].displayName) || m }));
+}
+
+function initDraftTeams() {
+  draftTeams = [
+    { id:'you', name: currentUserDisplayName || 'You', avatar:'🌸', color:'#E8007D', isYou:true, claimed:true, budget:BUDGET, horses:[] }
+  ];
+  const others = getOtherLeagueMembers();
+  if (others) {
+    others.forEach(m => {
+      draftTeams.push({ id:'member_'+m.username, name:m.displayName, avatar:'👤', color:'#9090a0', isYou:false, claimed:false, budget:BUDGET, horses:[] });
+    });
+  } else {
+    for (let i = 0; i < DRAFT_OPEN_SEATS_FALLBACK; i++) {
+      draftTeams.push({ id:'seat'+i, name:'Open Seat', avatar:'➕', color:'#9090a0', isYou:false, claimed:false, budget:BUDGET, horses:[] });
+    }
+  }
+}
+
+function clearDraftTimers() {
+  if (draftNomTimer) clearInterval(draftNomTimer);
+  if (draftBidTimer) clearInterval(draftBidTimer);
+  draftNomTimer = null;
+  draftBidTimer = null;
+}
+
+function maxBidFor(team) {
+  const reserve = Math.max(0, draftSlotsTotal() - team.horses.length - 1) * DRAFT_MIN_RESERVE;
+  return Math.max(0, team.budget - reserve);
+}
+
+function bidIncrement(bid) {
+  return 1; // $1 cap, $1 horses on average — every bid is a flat $1 raise
+}
+
+function teamsStillDrafting() {
+  return draftTeams.filter(t => t.claimed && t.horses.length < draftSlotsTotal());
+}
+
+function startDraft() {
+  if (draftStatus !== 'idle') return;
+  const league = getMyLeague();
+  if (!league) {
+    alert('Join or create a league before drafting — head to the Join A League tab.');
+    return;
+  }
+  const manager = isLeagueManager(league);
+  const scheduled = league.scheduledDraftAt;
+  if (!scheduled && !manager) {
+    alert(`Your league manager, ${league.managerUsername === currentUser ? 'you' : 'the manager'}, hasn't scheduled the draft yet.`);
+    return;
+  }
+  if (scheduled && new Date(scheduled) > new Date() && !manager) {
+    alert(`The draft is scheduled for ${fmtLeagueDateTime(scheduled)} — it hasn't started yet.`);
+    return;
+  }
+  if (!players.horses.length) {
+    alert("There are no horses in the pool yet — head to the Data Import (Admin) tab and import a horse list before starting a draft.");
+    return;
+  }
+  initDraftTeams();
+  draftPool = players.horses.map(h => h.id);
+  draftLog  = [];
+  draftLot  = null;
+  draftNominatorIdx = 0;
+  document.getElementById('draftStartBtn').style.display = 'none';
+  beginNominationPhase();
+}
+
+function advanceToNextEligibleNominator() {
+  let attempts = 0;
+  while (attempts < draftTeams.length) {
+    const t = draftTeams[draftNominatorIdx];
+    if (t.claimed && t.horses.length < draftSlotsTotal()) return;
+    draftNominatorIdx = (draftNominatorIdx + 1) % draftTeams.length;
+    attempts++;
+  }
+}
+
+function beginNominationPhase() {
+  advanceToNextEligibleNominator();
+  if (!teamsStillDrafting().length || !draftPool.length) { finishDraft(); return; }
+  clearDraftTimers();
+  draftStatus = 'nominating';
+  draftLot = null;
+  draftNomTimeLeft = DRAFT_NOM_SECONDS;
+  draftNomTimer = setInterval(tickNomination, 1000);
+  renderDraftPage();
+}
+
+function moveToNextNominator() {
+  draftNominatorIdx = (draftNominatorIdx + 1) % draftTeams.length;
+  beginNominationPhase();
+}
+
+function tickNomination() {
+  draftNomTimeLeft--;
+  if (draftNomTimeLeft <= 0) {
+    clearInterval(draftNomTimer); draftNomTimer = null;
+    if (!draftPool.length) { finishDraft(); return; }
+    // Shot clock expired — a horse is nominated for you at random
+    const id = draftPool[Math.floor(Math.random()*draftPool.length)];
+    openLotForBidding(id);
+  } else {
+    updateDraftClockUI();
+  }
+}
+
+function nominateHorse(id) {
+  if (draftStatus !== 'nominating') return;
+  const nominator = draftTeams[draftNominatorIdx];
+  if (!nominator.isYou) return;
+  openLotForBidding(id);
+}
+
+function openLotForBidding(horseId) {
+  clearDraftTimers();
+  draftPool = draftPool.filter(id => id !== horseId);
+  const horse = players.horses.find(h => h.id === horseId);
+  const nominator = draftTeams[draftNominatorIdx];
+  let startBid = 1; // horses have no preset value — every auction opens at $1
+  startBid = Math.min(startBid, Math.max(1, maxBidFor(nominator)));
+  draftLot = { horseId, currentBid: startBid, currentBidderIdx: draftNominatorIdx, bids: 1 };
+  draftStatus = 'bidding';
+  draftBidTimeLeft = DRAFT_BID_SECONDS;
+  draftBidTimer = setInterval(tickBid, 1000);
+  renderDraftPage();
+}
+
+function tickBid() {
+  draftBidTimeLeft--;
+  if (draftBidTimeLeft <= 0) {
+    clearInterval(draftBidTimer); draftBidTimer = null;
+    awardLot();
+  } else {
+    updateDraftClockUI();
+  }
+}
+
+function placeYourBid(amount) {
+  if (draftStatus !== 'bidding' || !draftLot) return;
+  const you = draftTeams[0];
+  if (draftLot.currentBidderIdx === 0) return; // already leading — no rival managers connected yet
+  const nextAmt = draftLot.currentBid + bidIncrement(draftLot.currentBid);
+  const newBid = (amount === undefined || amount === null) ? nextAmt : amount;
+  if (newBid <= draftLot.currentBid) { alert('Your bid must be higher than the current bid.'); return; }
+  if (newBid > maxBidFor(you)) { alert('That exceeds your available cap — you need to leave at least $1 per remaining empty slot.'); return; }
+  draftLot.currentBid = newBid;
+  draftLot.currentBidderIdx = 0;
+  draftLot.bids++;
+  draftBidTimeLeft = DRAFT_BID_SECONDS;
+  renderDraftPage();
+}
+
+function placeCustomBid() {
+  const input = document.getElementById('customBidInput');
+  if (!input) return;
+  const val = parseInt(input.value, 10);
+  if (!val || isNaN(val)) return;
+  placeYourBid(val);
+}
+
+function awardLot() {
+  const winner = draftTeams[draftLot.currentBidderIdx];
+  const horse  = players.horses.find(h => h.id === draftLot.horseId);
+  winner.budget -= draftLot.currentBid;
+  winner.horses.push({ id: horse.id, name: horse.name, price: draftLot.currentBid });
+  draftLog.unshift({ team: winner.name, isYou: winner.isYou, horseName: horse.name, price: draftLot.currentBid, bids: draftLot.bids });
+  draftLot = null;
+  moveToNextNominator();
+}
+
+function finishDraft() {
+  clearDraftTimers();
+  draftStatus = 'complete';
+  renderDraftPage();
+}
+
+function resetDraft() {
+  if (draftStatus !== 'idle' && !confirm('Reset the draft? This clears every pick and starts over.')) return;
+  clearDraftTimers();
+  draftStatus = 'idle';
+  draftTeams = [];
+  draftPool = [];
+  draftLog = [];
+  draftLot = null;
+  draftNominatorIdx = 0;
+  const startBtn = document.getElementById('draftStartBtn');
+  if (startBtn) startBtn.style.display = '';
+  renderDraftPage();
+}
+
+// ── FAST-FORWARD (demo / QA convenience — instantly resolves the rest of the draft to you) ──
+function resolveLotInstant(horseId, forcedNominatorIdx) {
+  draftPool = draftPool.filter(id => id !== horseId);
+  const horse = players.horses.find(h => h.id === horseId);
+  const winner = draftTeams[forcedNominatorIdx];
+  const startBid = Math.min(1, Math.max(1, maxBidFor(winner)));
+  winner.budget -= startBid;
+  winner.horses.push({ id: horse.id, name: horse.name, price: startBid });
+  draftLog.unshift({ team: winner.name, isYou: winner.isYou, horseName: horse.name, price: startBid, bids: 1 });
+}
+
+function simulateRestOfDraft() {
+  if (draftStatus === 'idle' || draftStatus === 'complete') return;
+  clearDraftTimers();
+  if (draftLot) { resolveLotInstant(draftLot.horseId, draftLot.currentBidderIdx); draftLot = null; }
+  let guard = 0;
+  while (guard < 2000) {
+    guard++;
+    advanceToNextEligibleNominator();
+    if (!teamsStillDrafting().length || !draftPool.length) break;
+    const horseId = draftPool[Math.floor(Math.random()*draftPool.length)];
+    resolveLotInstant(horseId, draftNominatorIdx);
+  }
+  draftStatus = 'complete';
+  renderDraftPage();
+}
+
+// ── IMPORT WINNING BIDS INTO MY STABLE ──
+function importDraftToStable() {
+  const you = draftTeams[0];
+
+  if (!you || !you.horses.length) return;
+  const wonHorses = you.horses.slice(0, SLOTS.horses);
+  selected.horses = wonHorses.map(h => h.id);
+  paidPrices = {};
+  wonHorses.forEach(h => { paidPrices[h.id] = h.price; }); // what you actually paid at auction
+  captainId = selected.horses[0] || null;
+  viceCaptainId = selected.horses[1] || null;
+  refresh();
+  alert("Your drafted stable has been imported into My Stable! Review your Captain and hit Save My Stable from there.");
+  showPage('myteam');
+}
+
+// ── RENDERING ──
+function updateDraftHeroStats() {
+  const you = draftTeams[0];
+  document.getElementById('draftYourBudget').textContent = fmt(you ? you.budget : BUDGET);
+  document.getElementById('draftYourSlots').textContent  = (you ? you.horses.length : 0) + '/' + draftSlotsTotal();
+  const fastBtn = document.getElementById('draftFastBtn');
+  if (fastBtn) fastBtn.style.display = (draftStatus === 'nominating' || draftStatus === 'bidding') ? '' : 'none';
+}
+
+function updateDraftClockUI() {
+  if (draftStatus === 'nominating') {
+    const clockEl = document.getElementById('draftNomClock');
+    const ringEl  = document.getElementById('draftNomRing');
+    if (clockEl) clockEl.textContent = draftNomTimeLeft + 's';
+    if (ringEl) {
+      ringEl.style.setProperty('--pct', (draftNomTimeLeft/DRAFT_NOM_SECONDS*100) + '%');
+      ringEl.classList.toggle('urgent', draftNomTimeLeft <= 5);
+    }
+  } else if (draftStatus === 'bidding') {
+    const clockEl = document.getElementById('draftBidClock');
+    const ringEl  = document.getElementById('draftBidRing');
+    if (clockEl) clockEl.textContent = draftBidTimeLeft + 's';
+    if (ringEl) {
+      ringEl.style.setProperty('--pct', (draftBidTimeLeft/DRAFT_BID_SECONDS*100) + '%');
+      ringEl.classList.toggle('urgent', draftBidTimeLeft <= 3);
+    }
+  }
+}
+
+function renderDraftPage() {
+  const body = document.getElementById('draftBody');
+  if (!body) return;
+  updateDraftHeroStats();
+
+  if (draftStatus === 'idle') {
+    body.innerHTML = draftIdleHTML();
+    return;
+  }
+
+  let html = '';
+  if (draftStatus === 'complete') html += draftCompleteBannerHTML();
+  html += draftLayoutHTML();
+  body.innerHTML = html;
+
+  if (draftStatus === 'nominating' && draftTeams[draftNominatorIdx] && draftTeams[draftNominatorIdx].isYou) {
+    renderNominationList();
+  }
+}
+
+function draftIdleHTML() {
+  const league = getMyLeague();
+
+  if (!league) {
+    return `
+    <div class="admin-banner" style="margin-bottom:18px;">
+      🏆 <strong>You're not in a league yet.</strong> Head to the <strong>Join A League</strong> tab to create one or join with a code — your draft happens with your league.
+    </div>`;
+  }
+
+  const manager = isLeagueManager(league);
+  const scheduled = league.scheduledDraftAt;
+  const scheduledFuture = scheduled && new Date(scheduled) > new Date();
+
+  let gateWarning = '';
+  if (!scheduled && !manager) {
+    gateWarning = `<div class="admin-banner" style="margin-bottom:18px;">🗓️ <strong>Waiting on your manager.</strong> ${league.managerUsername} hasn't scheduled a draft time yet — check back soon, or ping them.</div>`;
+  } else if (scheduledFuture && !manager) {
+    gateWarning = `<div class="admin-banner" style="margin-bottom:18px;">🗓️ <strong>Draft scheduled for ${fmtLeagueDateTime(scheduled)}.</strong> The Start Draft button unlocks once that time arrives.</div>`;
+  } else if (scheduledFuture && manager) {
+    gateWarning = `<div class="admin-banner" style="margin-bottom:18px;">🗓️ <strong>Draft scheduled for ${fmtLeagueDateTime(scheduled)}.</strong> As manager you can start early with the button below, or wait for the scheduled time.</div>`;
+  }
+
+  const emptyPoolWarning = !players.horses.length ? `
+  <div class="admin-banner" style="margin-bottom:18px;">
+    ⚠️ <strong>The horse pool is empty.</strong> Head to the <strong>Data Import (Admin)</strong> tab and run a Horse Pool Import (or an Acceptances import) before starting a draft — there's nothing to nominate yet.
+  </div>` : '';
+
+  const others = getOtherLeagueMembers() || [];
+  const seatCount = others.length + 1;
+
+  return `
+  ${gateWarning}
+  ${emptyPoolWarning}
+  <div class="rules-card rules-card-full" style="margin-bottom:18px;">
+    <div class="rules-card-header">🔨 How The Draft Works</div>
+    <div class="rules-card-body">
+      <div class="rules-row"><span class="rules-icon">🎙️</span><div><strong>Nomination Shot Clock</strong><div class="rules-sub">Whoever's on the clock has ${DRAFT_NOM_SECONDS} seconds to nominate any available horse and put it up for bidding. Miss it and a horse is nominated at random.</div></div></div>
+      <div class="rules-row"><span class="rules-icon">💸</span><div><strong>Open Bidding</strong><div class="rules-sub">Once a horse is nominated, every manager in the room can bid. Every new bid resets the clock to ${DRAFT_BID_SECONDS} seconds. When the clock runs out, the horse is sold to the highest bidder.</div></div></div>
+      <div class="rules-row"><span class="rules-icon">💰</span><div><strong>$100 Salary Cap Each</strong><div class="rules-sub">Every manager starts with the same $100 cap. You can't bid more than you can afford once you've set aside at least $1 for every remaining empty slot.</div></div></div>
+      <div class="rules-row"><span class="rules-icon">🐎</span><div><strong>10 Horses Each</strong><div class="rules-sub">The draft ends once every manager has filled all 10 horse slots or the horse pool runs out.</div></div></div>
+      <div class="rules-row"><span class="rules-icon">🔒</span><div><strong>Solo Preview For Now</strong><div class="rules-sub">Your ${others.length} other league mate${others.length===1?'':'s'} ${others.length===1?'is':'are'} listed below, but until this app is on a shared server, only you can actually bid — nominate a horse and it's yours at the opening bid once the clock runs out.</div></div></div>
+    </div>
+  </div>
+  <div class="draft-board">
+    <div class="draft-board-header"><span>Draft Room — ${league.name} — ${seatCount} Seat${seatCount===1?'':'s'}</span><span>${players.horses.length} horses in pool</span></div>
+    <div class="draft-board-body">
+      <div class="draft-team-card you">
+        <div class="draft-team-avatar" style="background:#E8007D22;color:#E8007D;border:1.5px solid #E8007D55">🌸</div>
+        <div class="draft-team-info"><div class="draft-team-name">${currentUserDisplayName || 'You'}${manager ? '<span class="league-manager-badge">Manager</span>' : ''}</div><div class="draft-team-sub">Ready to draft</div></div>
+        <div class="draft-team-right"><div class="draft-team-budget">${fmt(BUDGET)}</div><div class="draft-team-slots">cap left</div></div>
+      </div>
+      ${others.map(m => `
+      <div class="draft-team-card">
+        <div class="draft-team-avatar" style="background:#9090a022;color:#9090a0;border:1.5px solid #9090a055">👤</div>
+        <div class="draft-team-info"><div class="draft-team-name">${m.displayName}${m.username === league.managerUsername ? '<span class="league-manager-badge">Manager</span>' : ''}</div><div class="draft-team-sub">Awaiting a manager to log in</div></div>
+        <div class="draft-team-right"><div class="draft-team-budget">${fmt(BUDGET)}</div><div class="draft-team-slots">cap left</div></div>
+      </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+function draftLayoutHTML() {
+  return `<div class="draft-layout">
+    <div>
+      ${draftLotCardHTML()}
+      ${draftLogHTML()}
+    </div>
+    <div>
+      ${draftBoardHTML()}
+    </div>
+  </div>`;
+}
+
+function draftLotCardHTML() {
+  if (draftStatus === 'bidding' && draftLot) {
+    const horse   = players.horses.find(h => h.id === draftLot.horseId);
+    const bidder  = draftTeams[draftLot.currentBidderIdx];
+    const you     = draftTeams[0];
+    const youWinning = draftLot.currentBidderIdx === 0;
+    const nextAmt = draftLot.currentBid + bidIncrement(draftLot.currentBid);
+    const canYouBid = !youWinning && you.horses.length < draftSlotsTotal() && nextAmt <= maxBidFor(you);
+    return `<div class="draft-lot-card">
+      <div class="draft-lot-top">
+        <div class="draft-lot-avatar">${horse.emoji}</div>
+        <div class="draft-lot-info">
+          <div class="draft-lot-name">${horse.name}</div>
+          <div class="draft-lot-meta">${horse.meta}</div>
+          <div class="draft-lot-guide">${horse.keyRaces}</div>
+        </div>
+        <div class="draft-clock-ring" id="draftBidRing" style="--pct:${(draftBidTimeLeft/DRAFT_BID_SECONDS*100)}%"><span id="draftBidClock">${draftBidTimeLeft}s</span></div>
+      </div>
+      <div class="draft-bid-row">
+        <div class="draft-current-bid">
+          <div class="draft-current-bid-val">${fmt(draftLot.currentBid)}</div>
+          <div class="draft-current-bid-by">Leading bidder: <strong>${bidder.name}</strong> · ${draftLot.bids} bid${draftLot.bids===1?'':'s'}</div>
+        </div>
+        <div class="draft-bid-actions">
+          <button class="draft-bid-chip primary" ${canYouBid ? '' : 'disabled'} onclick="placeYourBid()">Bid ${fmt(nextAmt)}</button>
+          <input type="number" id="customBidInput" class="draft-custom-bid" placeholder="Custom $">
+          <button class="draft-bid-chip" onclick="placeCustomBid()">Place</button>
+        </div>
+      </div>
+      ${youWinning
+        ? `<div class="draft-you-winning">✅ You're the leading bidder on ${horse.name} — no rival managers are connected yet, so this is yours once the clock runs out.</div>`
+        : (you.horses.length < draftSlotsTotal() ? `<div class="draft-you-outbid">⚠ You've been outbid on ${horse.name} — respond before the clock runs out!</div>` : '')}
+    </div>`;
+  }
+
+  if (draftStatus === 'nominating') {
+    const nominator = draftTeams[draftNominatorIdx];
+    if (nominator.isYou) {
+      return `<div class="draft-lot-card">
+        <div class="draft-lot-top">
+          <div class="draft-lot-avatar" style="background:linear-gradient(135deg,#1A1F5E,#2D3480);">🎙️</div>
+          <div class="draft-lot-info">
+            <div class="draft-lot-name">Your turn to nominate</div>
+            <div class="draft-lot-meta">Pick any available horse to put up for bidding</div>
+          </div>
+          <div class="draft-clock-ring" id="draftNomRing" style="--pct:${(draftNomTimeLeft/DRAFT_NOM_SECONDS*100)}%"><span id="draftNomClock">${draftNomTimeLeft}s</span></div>
+        </div>
+        <div class="draft-nominate-panel">
+          <input class="draft-nominate-search" id="draftNomSearch" placeholder="Search available horses…" oninput="renderNominationList()">
+          <div class="draft-nominate-list" id="draftNomList"></div>
+        </div>
+      </div>`;
+    }
+    return `<div class="draft-lot-card">
+      <div class="draft-waiting"><div class="draft-waiting-dot"></div> ${nominator.name} is choosing a horse to nominate…</div>
+    </div>`;
+  }
+
+  if (draftStatus === 'complete') {
+    return `<div class="draft-lot-card"><div class="draft-lot-empty">🏁 Draft complete — every connected manager has filled their stable (or the pool ran out).</div></div>`;
+  }
+
+  return `<div class="draft-lot-card"><div class="draft-lot-empty">Waiting…</div></div>`;
+}
+
+function renderNominationList() {
+  const listEl = document.getElementById('draftNomList');
+  if (!listEl) return;
+  const q = (document.getElementById('draftNomSearch')?.value || '').toLowerCase();
+  const avail = draftPool
+    .map(id => players.horses.find(h => h.id === id))
+    .filter(h => h && h.name.toLowerCase().includes(q));
+  avail.sort((a,b) => a.name.localeCompare(b.name));
+  listEl.innerHTML = avail.slice(0, 60).map(h => `
+    <div class="draft-nom-row" onclick="nominateHorse('${h.id}')">
+      <div class="spr-avatar horse">${h.emoji}</div>
+      <div class="spr-info"><div class="spr-name">${h.name}</div><div class="spr-meta">${h.meta}</div></div>
+    </div>`).join('') || `<div style="text-align:center;padding:20px;color:#c070a0;">No horses match your search.</div>`;
+}
+
+function draftBoardHTML() {
+  const showReset = draftStatus !== 'idle';
+  return `<div class="draft-board">
+    <div class="draft-board-header">
+      <span>Draft Board</span>
+      <span ${showReset ? `onclick="resetDraft()"` : ''}>${draftStatus === 'complete' ? '↺ New Draft' : (showReset ? '↺ Reset' : draftPool.length + ' left')}</span>
+    </div>
+    <div class="draft-board-body">
+      ${draftTeams.map((t, idx) => `
+      <div class="draft-team-card ${t.isYou ? 'you' : ''} ${idx === draftNominatorIdx && draftStatus === 'nominating' ? 'on-clock' : ''}">
+        <div class="draft-team-avatar" style="background:${t.color}22;color:${t.color};border:1.5px solid ${t.color}55">${t.avatar}</div>
+        <div class="draft-team-info">
+          <div class="draft-team-name">${t.name}${idx === draftNominatorIdx && draftStatus === 'nominating' ? '<span class="draft-onclock-badge">On Clock</span>' : ''}</div>
+          <div class="draft-team-sub">${t.claimed ? t.horses.length + '/' + draftSlotsTotal() + ' horses' : 'Awaiting a manager'}</div>
+        </div>
+        <div class="draft-team-right">
+          <div class="draft-team-budget">${fmt(t.budget)}</div>
+          <div class="draft-team-slots">cap left</div>
+        </div>
+      </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+function draftLogHTML() {
+  return `<div class="draft-log">
+    <div class="draft-log-header">📜 Draft Log</div>
+    <div class="draft-log-body" id="draftLogBody">
+      ${draftLog.length ? draftLog.map(l => `
+      <div class="draft-log-row">
+        <span>${l.isYou ? '🌸 ' + l.team : l.team}</span><span>won</span><strong>${l.horseName}</strong>
+        <span class="draft-log-price">${fmt(l.price)}</span>
+      </div>`).join('') : `<div style="padding:20px;text-align:center;color:#c070a0;">No horses sold yet.</div>`}
+    </div>
+  </div>`;
+}
+
+function draftCompleteBannerHTML() {
+  const you = draftTeams[0];
+  return `<div class="draft-complete-banner">
+    <div style="font-family:'Anton',Impact,sans-serif;font-size:24px;">🏁 Draft Complete!</div>
+    <div style="font-size:12px;margin-top:6px;opacity:.9;">You won ${you.horses.length} horse${you.horses.length===1?'':'s'} for ${fmt(BUDGET - you.budget)} of your $100 cap.</div>
+    <button class="draft-import-btn" onclick="importDraftToStable()">Import My Draft Picks Into My Stable →</button>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DATA IMPORT (ADMIN) — weekly acceptances & results/prizemoney
+// Persists to localStorage so imports survive a refresh in this browser.
+// Once on Supabase, this same import logic writes to real tables instead.
+// ═══════════════════════════════════════════════════════════════
+
+const NEW_HORSE_DEFAULT_PRICE = 0; // unused for bidding — horses have no preset price, the auction sets it
+
+function normalizeName(s) {
+  return (s || '').toString().trim().toLowerCase().replace(/\s+/g, ' ').replace(/[''`]/g, "'");
+}
+
+function slugify(s) {
+  return normalizeName(s).replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '') || 'horse';
+}
+
+function findHorseByName(name, index) {
+  const norm = normalizeName(name);
+  if (index) return index.get(norm); // O(1) — used by bulk imports
+  return players.horses.find(h => normalizeName(h.name) === norm); // O(n) — fine for one-off lookups
+}
+
+function buildHorseNameIndex() {
+  const idx = new Map();
+  players.horses.forEach(h => idx.set(normalizeName(h.name), h));
+  return idx;
+}
+
+function ensureHorseExists(name, extra, index) {
+  let h = findHorseByName(name, index);
+  if (h) return h;
+  extra = extra || {};
+  h = {
+    id: 'new_' + slugify(name),
+    name: name,
+    emoji: '🐎',
+    meta: extra.trainer ? ('T: ' + extra.trainer) : 'Auto-added via import',
+    keyRaces: extra.keyRaces || '',
+    price: NEW_HORSE_DEFAULT_PRICE,
+    tags: extra.tags && extra.tags.length ? extra.tags : ['new'],
+    futures: [],
+    notes: extra.notes || 'Auto-added from an import — update details in the Horse_Pool spreadsheet when convenient.'
+  };
+  players.horses.push(h);
+  importedNewHorses.push(h);
+  if (index) index.set(normalizeName(name), h); // keep the index in sync within this import
+  return h;
+}
+
+function persistAddedHorses() {
+  localStorage.setItem('srcAddedHorses', JSON.stringify(importedNewHorses));
+}
+
+function loadSeasonData() {
+  try {
+    importedNewHorses = JSON.parse(localStorage.getItem('srcAddedHorses') || '[]');
+    importedNewHorses.forEach(h => { if (!players.horses.find(x => x.id === h.id)) players.horses.push(h); });
+  } catch (e) { importedNewHorses = []; }
+  try {
+    const savedWeek = JSON.parse(localStorage.getItem('srcThisWeekRaces') || 'null');
+    if (savedWeek) Object.assign(thisWeekRaces, savedWeek);
+  } catch (e) { /* ignore */ }
+  try {
+    const savedEarnings = JSON.parse(localStorage.getItem('srcLiveEarnings') || 'null');
+    if (savedEarnings) Object.assign(liveEarnings2026, savedEarnings);
+  } catch (e) { /* ignore */ }
+}
+
+function resetImportedData() {
+  if (!confirm('Clear every horse, this-week race, and earnings total added via import in this browser? The built-in horse list is untouched.')) return;
+  localStorage.removeItem('srcAddedHorses');
+  localStorage.removeItem('srcThisWeekRaces');
+  localStorage.removeItem('srcLiveEarnings');
+  players.horses = players.horses.filter(h => !(h.tags && h.tags.includes('new')));
+  Object.keys(thisWeekRaces).forEach(k => delete thisWeekRaces[k]);
+  Object.keys(liveEarnings2026).forEach(k => delete liveEarnings2026[k]);
+  importedNewHorses = [];
+  renderAdminStats();
+  document.getElementById('acceptancesImportResult').innerHTML = '';
+  document.getElementById('resultsImportResult').innerHTML = '';
+  alert('Imported data cleared.');
+}
+
+function renderAdminStats() {
+  const h = document.getElementById('adminStatHorses');
+  const r = document.getElementById('adminStatRacing');
+  const e = document.getElementById('adminStatEarning');
+  if (h) h.textContent = players.horses.length;
+  if (r) r.textContent = Object.keys(thisWeekRaces).length;
+  if (e) e.textContent = Object.keys(liveEarnings2026).filter(k => liveEarnings2026[k] > 0).length;
+}
+
+// ── file / sheet parsing helpers ──
+function readWorkbookFile(file, callback) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, { type: 'array', cellDates: true });
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: true, defval: '' });
+      callback(rows, null);
+    } catch (err) {
+      callback(null, err.message || 'Could not read that file.');
+    }
+  };
+  reader.onerror = () => callback(null, 'Could not read that file.');
+  reader.readAsArrayBuffer(file);
+}
+
+function findHeaderRow(rows) {
+  for (let i = 0; i < Math.min(rows.length, 15); i++) {
+    const row = rows[i];
+    if (row && row.some(c => typeof c === 'string' && /horse/i.test(c))) return i;
+  }
+  return -1;
+}
+
+function colIndex(headerRow, pattern) {
+  for (let i = 0; i < headerRow.length; i++) {
+    if (typeof headerRow[i] === 'string' && pattern.test(headerRow[i])) return i;
+  }
+  return -1;
+}
+
+function fmtImportDate(v) {
+  if (v instanceof Date && !isNaN(v)) {
+    return v.toLocaleDateString('en-AU', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+  return v ? String(v) : '';
+}
+
+function renderImportResult(targetId, html, isError) {
+  document.getElementById(targetId).innerHTML =
+    `<div class="admin-result ${isError ? 'err' : 'ok'}">${html}</div>`;
+}
+
+// ── acceptances import ──
+// ── horse pool import (bulk add horse names, no acceptances/results needed) ──
+function handleHorsePoolFile() {
+  const input = document.getElementById('horsePoolFileInput');
+  const file = input.files[0];
+  if (!file) { alert('Choose a horse pool file first.'); return; }
+
+  readWorkbookFile(file, (rows, err) => {
+    if (err) { renderImportResult('horsePoolImportResult', err, true); return; }
+    const headerIdx = findHeaderRow(rows);
+    if (headerIdx === -1) {
+      renderImportResult('horsePoolImportResult', 'Could not find a header row containing a "horse_name" (or "horse") column. Check the file format.', true);
+      return;
+    }
+    const header      = rows[headerIdx];
+    const horseCol    = colIndex(header, /horse/i);
+    const trainerCol  = colIndex(header, /trainer/i);
+    const keyRacesCol = colIndex(header, /key.?race/i);
+    const tagsCol     = colIndex(header, /tag/i);
+    const notesCol    = colIndex(header, /note/i);
+
+    const dataRows = rows.slice(headerIdx + 1).filter(r => r && r[horseCol] !== '' && r[horseCol] != null);
+    if (!dataRows.length) {
+      renderImportResult('horsePoolImportResult', 'No data rows found under the header.', true);
+      return;
+    }
+
+    let matched = 0, created = 0;
+    const newHorseNames = [];
+    const nameIndex = buildHorseNameIndex(); // O(1) lookups instead of an O(n) scan per row
+
+    dataRows.forEach(r => {
+      const horseName = String(r[horseCol]).trim();
+      if (!horseName) return;
+      const trainer  = trainerCol  !== -1 ? String(r[trainerCol]  || '').trim() : '';
+      const keyRaces = keyRacesCol !== -1 ? String(r[keyRacesCol] || '').trim() : '';
+      const notes    = notesCol    !== -1 ? String(r[notesCol]    || '').trim() : '';
+      const tags     = tagsCol     !== -1 ? String(r[tagsCol] || '').split(',').map(t => t.trim()).filter(Boolean) : [];
+
+      const existed = !!findHorseByName(horseName, nameIndex);
+      ensureHorseExists(horseName, { trainer, keyRaces, notes, tags }, nameIndex);
+      if (existed) matched++; else { created++; newHorseNames.push(horseName); }
+    });
+
+    persistAddedHorses();
+
+    let html = `<span class="admin-result-stat">${dataRows.length} rows</span>` +
+      `<span class="admin-result-stat">${matched} already in pool</span>` +
+      `<span class="admin-result-stat">${created} new</span>`;
+    if (newHorseNames.length) {
+      html += `<div class="admin-new-list">New horses added: ${newHorseNames.join(', ')}</div>`;
+    }
+    renderImportResult('horsePoolImportResult', html, false);
+    renderAdminStats();
+    refresh();
+  });
+}
+
+function handleAcceptancesFile() {
+  const input = document.getElementById('acceptancesFileInput');
+  const file = input.files[0];
+  if (!file) { alert('Choose an acceptances file first.'); return; }
+
+  readWorkbookFile(file, (rows, err) => {
+    if (err) { renderImportResult('acceptancesImportResult', err, true); return; }
+    const headerIdx = findHeaderRow(rows);
+    if (headerIdx === -1) {
+      renderImportResult('acceptancesImportResult', 'Could not find a header row containing a "horse_name" column. Check the file format.', true);
+      return;
+    }
+    const header  = rows[headerIdx];
+    const dateCol  = colIndex(header, /date/i);
+    const venueCol = colIndex(header, /venue/i);
+    const raceCol  = colIndex(header, /race/i);
+    const horseCol = colIndex(header, /horse/i);
+
+    const dataRows = rows.slice(headerIdx + 1).filter(r => r && r[horseCol] !== '' && r[horseCol] != null);
+    if (!dataRows.length) {
+      renderImportResult('acceptancesImportResult', 'No data rows found under the header.', true);
+      return;
+    }
+
+    const newWeek = {};
+    let matched = 0, created = 0;
+    const newHorseNames = [];
+    const dates = new Set(), venues = new Set();
+    const nameIndex = buildHorseNameIndex(); // O(1) lookups instead of an O(n) scan per row
+
+    dataRows.forEach(r => {
+      const horseName = String(r[horseCol]).trim();
+      if (!horseName) return;
+      const dateVal  = dateCol  !== -1 ? fmtImportDate(r[dateCol]) : '';
+      const venueVal = venueCol !== -1 ? String(r[venueCol] || '').trim() : '';
+      const raceVal  = raceCol  !== -1 ? r[raceCol] : '';
+      if (dateVal)  dates.add(dateVal);
+      if (venueVal) venues.add(venueVal);
+
+      const existed = !!findHorseByName(horseName, nameIndex);
+      const horse = ensureHorseExists(horseName, null, nameIndex);
+      if (existed) matched++; else { created++; newHorseNames.push(horseName); }
+
+      newWeek[horse.id] = { venue: venueVal, raceNumber: raceVal, date: dateVal };
+    });
+
+    Object.keys(thisWeekRaces).forEach(k => delete thisWeekRaces[k]);
+    Object.assign(thisWeekRaces, newWeek);
+    localStorage.setItem('srcThisWeekRaces', JSON.stringify(thisWeekRaces));
+    persistAddedHorses();
+
+    let html = `<span class="admin-result-stat">${dataRows.length} rows</span>` +
+      `<span class="admin-result-stat">${matched} matched</span>` +
+      `<span class="admin-result-stat">${created} new</span>` +
+      `<div style="margin-top:8px;">Dates: ${[...dates].sort().join(', ') || '—'}<br>Venues: ${[...venues].sort().join(', ') || '—'}</div>`;
+    if (newHorseNames.length) {
+      html += `<div class="admin-new-list">New horses added to the pool (no preset price — set at auction): ${newHorseNames.join(', ')}</div>`;
+    }
+    renderImportResult('acceptancesImportResult', html, false);
+    renderAdminStats();
+    refresh();
+  });
+}
+
+// ── cumulative prizemoney import (replaces each horse's season-to-date total) ──
+function handleResultsFile() {
+  const input = document.getElementById('resultsFileInput');
+  const file = input.files[0];
+  if (!file) { alert('Choose a results file first.'); return; }
+
+  readWorkbookFile(file, (rows, err) => {
+    if (err) { renderImportResult('resultsImportResult', err, true); return; }
+    const headerIdx = findHeaderRow(rows);
+    if (headerIdx === -1) {
+      renderImportResult('resultsImportResult', 'Could not find a header row containing a "horse_name" column. Check the file format.', true);
+      return;
+    }
+    const header  = rows[headerIdx];
+    const horseCol = colIndex(header, /horse/i);
+    const prizeCol = colIndex(header, /prize/i);
+    if (prizeCol === -1) {
+      renderImportResult('resultsImportResult', 'Could not find a prizemoney column — name it something containing "prize" (e.g. prizemoney_won).', true);
+      return;
+    }
+
+    const dataRows = rows.slice(headerIdx + 1).filter(r => r && r[horseCol] !== '' && r[horseCol] != null);
+    if (!dataRows.length) {
+      renderImportResult('resultsImportResult', 'No data rows found under the header.', true);
+      return;
+    }
+
+    let updated = 0, created = 0, totalImported = 0;
+    const newHorseNames = [];
+    const nameIndex = buildHorseNameIndex(); // O(1) lookups instead of an O(n) scan per row
+
+    dataRows.forEach(r => {
+      const horseName = String(r[horseCol]).trim();
+      if (!horseName) return;
+      const prizeRaw = r[prizeCol];
+      const prize = parseFloat(String(prizeRaw).replace(/[^0-9.\-]/g, '')) || 0;
+      if (!prize) return;
+
+      const existed = !!findHorseByName(horseName, nameIndex);
+      const horse = ensureHorseExists(horseName, null, nameIndex);
+      if (existed) updated++; else { created++; newHorseNames.push(horseName); }
+
+      // This file gives a running season-to-date total per horse, so each import
+      // REPLACES the stored figure rather than adding to it — re-importing a
+      // later export naturally corrects/updates the total, it never double-counts.
+      liveEarnings2026[horse.id] = prize;
+      totalImported += prize;
+    });
+
+    localStorage.setItem('srcLiveEarnings', JSON.stringify(liveEarnings2026));
+    persistAddedHorses();
+
+    let html = `<span class="admin-result-stat">${dataRows.length} rows</span>` +
+      `<span class="admin-result-stat">${updated} updated</span>` +
+      `<span class="admin-result-stat">${created} new</span>` +
+      `<div style="margin-top:8px;">Total prizemoney reflected across this import: ${fmt(totalImported)}</div>`;
+    if (newHorseNames.length) {
+      html += `<div class="admin-new-list">New horses added (won money but weren't already in the pool — worth checking for name typos): ${newHorseNames.join(', ')}</div>`;
+    }
+    renderImportResult('resultsImportResult', html, false);
+    renderAdminStats();
+    refresh();
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LEAGUE SYSTEM — local scaffolding (browser-only, matches the intended
+// multiplayer flow but stays solo-preview until the Supabase migration).
+// ═══════════════════════════════════════════════════════════════
+
+function getLeagues() {
+  try { return JSON.parse(localStorage.getItem('srcLeagues') || '{}'); } catch(e) { return {}; }
+}
+function saveLeagues(l) { localStorage.setItem('srcLeagues', JSON.stringify(l)); }
+
+function getMyLeague() {
+  if (!currentUserLeagueCode) return null;
+  return getLeagues()[currentUserLeagueCode] || null;
+}
+
+function isLeagueManager(league) {
+  return !!league && !!currentUser && league.managerUsername === currentUser;
+}
+
+function generateLeagueCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no O/0/I/1 — avoids ambiguous codes
+  const leagues = getLeagues();
+  let code;
+  do {
+    code = '';
+    for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  } while (leagues[code]);
+  return code;
+}
+
+function setMyLeagueCode(code) {
+  currentUserLeagueCode = code;
+  const users = getUsers();
+  if (users[currentUser]) {
+    users[currentUser].leagueCode = code;
+    saveUsers(users);
+  }
+}
+
+function createLeague() {
+  const input = document.getElementById('leagueNameInput');
+  const name = (input?.value || '').trim();
+  if (!name) { alert('Give your league a name first.'); return; }
+  const code = generateLeagueCode();
+  const leagues = getLeagues();
+  leagues[code] = {
+    code, name,
+    managerUsername: currentUser,
+    members: [currentUser],
+    scheduledDraftAt: null,
+    createdAt: new Date().toISOString()
+  };
+  saveLeagues(leagues);
+  setMyLeagueCode(code);
+  renderLeaguePage();
+}
+
+function joinLeagueByCode() {
+  const input = document.getElementById('leagueCodeInput');
+  const code = (input?.value || '').trim().toUpperCase();
+  if (!code) { alert('Enter a league code first.'); return; }
+  const leagues = getLeagues();
+  const league = leagues[code];
+  if (!league) { alert("That league code doesn't match any league in this browser."); return; }
+  if (!league.members.includes(currentUser)) league.members.push(currentUser);
+  saveLeagues(leagues);
+  setMyLeagueCode(code);
+  renderLeaguePage();
+}
+
+function leaveLeague() {
+  const league = getMyLeague();
+  if (!league) return;
+  if (!confirm(`Leave "${league.name}"? You can rejoin later with the league code.`)) return;
+  const leagues = getLeagues();
+  leagues[league.code].members = leagues[league.code].members.filter(m => m !== currentUser);
+  saveLeagues(leagues);
+  setMyLeagueCode(null);
+  renderLeaguePage();
+}
+
+function scheduleDraft() {
+  const league = getMyLeague();
+  if (!league || !isLeagueManager(league)) return;
+  const input = document.getElementById('scheduleDraftInput');
+  const val = input?.value;
+  if (!val) { alert('Pick a date and time first.'); return; }
+  const leagues = getLeagues();
+  leagues[league.code].scheduledDraftAt = new Date(val).toISOString();
+  saveLeagues(leagues);
+  renderLeaguePage();
+}
+
+function fmtLeagueDateTime(iso) {
+  return new Date(iso).toLocaleString('en-AU', {
+    weekday: 'short', day: 'numeric', month: 'short',
+    hour: '2-digit', minute: '2-digit', timeZoneName: 'short',
+    timeZone: 'Australia/Melbourne'
+  });
+}
+
+function renderLeaguePage() {
+  const container = document.getElementById('leagueContainer');
+  if (!container) return;
+  const league = getMyLeague();
+  const users = getUsers();
+  const displayName = (u) => (users[u] && users[u].displayName) || u;
+
+  if (!league) {
+    container.innerHTML = `
+      <div class="league-card">
+        <div class="league-card-header">🏆 Create A League</div>
+        <label class="join-label">League Name</label>
+        <input class="join-input" id="leagueNameInput" placeholder="e.g. The Flemington Faithful" />
+        <button class="join-btn" onclick="createLeague()">Create League</button>
+      </div>
+      <div class="league-card">
+        <div class="league-card-header">🔗 Join With A Code</div>
+        <label class="join-label">League Code</label>
+        <input class="join-code-input" id="leagueCodeInput" placeholder="e.g. A7C29X" maxlength="10" oninput="this.value=this.value.toUpperCase()" />
+        <button class="join-btn" onclick="joinLeagueByCode()">Join League</button>
+      </div>
+      <div style="font-size:11px;color:#c070a0;line-height:1.6;">
+        This is a local preview — leagues and their codes are stored only in this browser for now, so other people can't yet join the same league from their own device. Full cross-device leagues arrive with the live version.
+      </div>`;
+    return;
+  }
+
+  const manager = isLeagueManager(league);
+  const scheduled = league.scheduledDraftAt;
+  const scheduledPast = scheduled && new Date(scheduled) <= new Date();
+
+  let scheduleHtml = '';
+  if (manager) {
+    scheduleHtml = `
+      <div class="league-card">
+        <div class="league-card-header">🗓️ Schedule The Draft</div>
+        ${scheduled
+          ? `<div class="schedule-status set">Scheduled for ${fmtLeagueDateTime(scheduled)}${scheduledPast ? ' — time has arrived, the draft can start' : ''}</div>`
+          : `<div class="schedule-status">No draft time set yet — members are waiting on you.</div>`}
+        <div class="schedule-row">
+          <input type="datetime-local" id="scheduleDraftInput" class="schedule-input" />
+          <button class="join-btn" style="width:auto;margin:0;padding:9px 18px;" onclick="scheduleDraft()">${scheduled ? 'Reschedule' : 'Set Draft Time'}</button>
+        </div>
+      </div>`;
+  } else {
+    scheduleHtml = `
+      <div class="league-card">
+        <div class="league-card-header">🗓️ Draft Schedule</div>
+        ${scheduled
+          ? `<div class="schedule-status set">Scheduled for ${fmtLeagueDateTime(scheduled)}${scheduledPast ? ' — time has arrived, head to the Draft Room' : ''}</div>`
+          : `<div class="schedule-status">Your league manager, ${displayName(league.managerUsername)}, hasn't scheduled the draft yet.</div>`}
+      </div>`;
+  }
+
+  container.innerHTML = `
+    <div class="league-hero">
+      <div class="league-hero-name">${league.name}</div>
+      <div class="league-hero-code-row">
+        <span class="league-code-chip">${league.code}</span>
+        <span class="league-hero-sub">share this code so others can join</span>
+      </div>
+      <div class="league-hero-sub">${league.members.length} member${league.members.length===1?'':'s'}</div>
+    </div>
+
+    ${scheduleHtml}
+
+    <div class="league-card">
+      <div class="league-card-header">👥 Members</div>
+      ${league.members.map(m => `
+        <div class="league-member-row">
+          <div class="league-member-avatar">${m === currentUser ? '🌸' : '👤'}</div>
+          <div class="league-member-name">${displayName(m)}${m === currentUser ? ' (You)' : ''}${m === league.managerUsername ? '<span class="league-manager-badge">Manager</span>' : ''}</div>
+        </div>`).join('')}
+    </div>
+
+    <span class="league-leave-link" onclick="leaveLeague()">↺ Leave this league</span>
+  `;
+}
+
+
+// ── STARTUP — runs after every declaration above has executed ──
+loadSeasonData();
+initAuth();
+</script>
+</body>
+</html>

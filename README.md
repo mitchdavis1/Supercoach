@@ -1,0 +1,135 @@
+# SuperStable — Spring Racing Carnival Fantasy Horse Racing
+
+A multi-user, Supabase-backed fantasy horse racing game. Managers join a
+league, win a stable of 10 horses in a live salary-cap auction draft, set a
+Captain (2× scoring), and trade horses week to week as real Spring Racing
+Carnival prizemoney rolls in.
+
+This is a migration of a single-file localStorage prototype
+(`legacy/src-supercoach-v5.html`) into a real backend, per
+`legacy/SuperStable_Supabase_Migration_Brief.md`. The rules, draft
+economics, scoring, and import logic are unchanged from that prototype —
+only the storage layer moved from one browser's localStorage to Supabase
+Postgres, with the draft and transfers now server-authoritative so they
+work correctly across multiple concurrent leagues and managers.
+
+## Stack
+
+- **Frontend**: static HTML/CSS/vanilla JS (ES modules), no build step.
+  `supabase-js` is loaded from a CDN (`esm.sh`), so this deploys as-is to
+  GitHub Pages, Vercel, or Netlify — just static file hosting.
+- **Backend**: Supabase (Postgres + Auth + Realtime). All business logic
+  that needs to be trustworthy (draft clock, bid validation, transfer
+  uniqueness) lives in Postgres functions (`supabase/migrations/`), not in
+  the client — the client only calls RPCs and reads tables through Row
+  Level Security.
+
+## Project layout
+
+```
+index.html            Single-page app shell — all pages, hidden/shown via JS
+css/styles.css         All styling (ported from the prototype)
+js/
+  config.js            Your Supabase URL + anon key (edit this)
+  supabaseClient.js     Creates the supabase-js client from config.js
+  state.js              Shared in-memory app state
+  auth.js                Sign up / sign in / sign out (Supabase Auth)
+  league.js              Create/join/schedule leagues, realtime membership
+  draft.js                Draft room: nominate/bid, realtime, server clock
+  stable.js                My Stable: captain/vice-captain
+  transfers.js              Weekly transfer flow
+  scoring.js                 Leaderboard (100% prizemoney, captain 2×)
+  admin-import.js             Horse pool / acceptances / prizemoney import
+  inplay.js                    "My Stable — Acceptances" view
+  app.js                        Entry point: page router, wires everything
+supabase/migrations/    Ordered SQL migrations — schema, RLS, RPCs
+legacy/                  The original prototype + migration brief, for reference
+```
+
+## Setup
+
+### 1. Create the Supabase project
+
+1. Create a project at [supabase.com](https://supabase.com).
+2. In the SQL Editor, run each file in `supabase/migrations/` **in order**
+   (0001 → 0007). They're plain SQL, so `supabase db push` via the CLI works
+   too if you prefer.
+3. In Authentication → Providers, email/password should already be enabled
+   by default. Decide whether you want "Confirm email" on — if it's on,
+   `handleJoin()` in `auth.js` already handles the "check your email"
+   case; if it's off, new accounts sign in immediately after creating one.
+
+### 2. Point the frontend at your project
+
+Edit `js/config.js`:
+
+```js
+window.SUPERSTABLE_CONFIG = {
+  SUPABASE_URL: 'https://your-project-ref.supabase.co',
+  SUPABASE_ANON_KEY: 'your-anon-key',
+};
+```
+
+Both values are in Project Settings → API. The anon key is safe to ship
+client-side — every request it makes still runs through Row Level Security
+as the signed-in user.
+
+### 3. Import a horse pool and grant yourself admin
+
+The Data Import (Admin) tab is hidden unless `profiles.is_admin = true`.
+After signing up once through the app, promote yourself from the SQL
+Editor:
+
+```sql
+update public.profiles set is_admin = true where username = 'your-username';
+```
+
+Then use the Data Import tab to upload a horse pool spreadsheet (a column
+containing "horse" in its header is all that's required) before anyone
+tries to start a draft — `start_draft()` will reject an empty pool.
+
+### 4. Deploy the frontend
+
+It's a static site — no build step. Any of these work:
+
+- **GitHub Pages**: push this repo, enable Pages on the branch/folder.
+- **Vercel** / **Netlify**: point either at the repo root, no build
+  command needed (or `Output directory: .`).
+
+### 5. Run a draft
+
+1. Create a league (Join A League tab), share its code with your friends.
+2. Optionally schedule a draft time — the manager can always start early or
+   with no schedule set; everyone else has to wait for the scheduled time.
+3. Start Draft. The nominator rotates in join order; nominating a horse
+   opens it at a $1 bid in your name; the 10s bid clock resets on every
+   raise; a 20s nomination clock auto-nominates a random horse if the
+   person on the clock doesn't act in time. Nobody needs to keep a tab open
+   for the clock to resolve — every RPC call (anyone bidding, nominating,
+   or just calling `advance_draft`) checks and resolves an expired clock
+   first.
+
+## Design notes / things a future pass should look at
+
+- **Weekly scoring isn't implemented** — this matches the prototype
+  exactly (`setLbRound()` was a no-op stub there too). The leaderboard is
+  always full-season: sum of each horse's cumulative `prizemoney.
+  total_prizemoney`, captain doubled. A real "Week N" breakdown would need
+  per-week prizemoney snapshots, which the source data (a single
+  season-to-date cumulative import) doesn't currently provide.
+- **No automatic Vice-Captain scoring fallback.** The Rules page text says
+  a scratched Captain's score falls back to the VC, but the prototype only
+  ever tracked VC as a badge — nothing computed the fallback. Carried over
+  as-is; flagged here as the same known gap the brief inherited.
+- **Draft clock resolution relies on some client calling an RPC.** Every
+  draft-room action self-heals an expired clock first, and any league
+  member simply having the draft room open causes a tick every second via
+  `advance_draft`. If literally everyone closes their tab mid-lot, the lot
+  stays open until someone reconnects. A `pg_cron` job calling
+  `advance_draft()` for in-progress leagues on a short interval would make
+  this fully unattended if that matters for your use case.
+- **The SQL migrations haven't been run against a live project yet** — they're
+  written carefully against the brief and the extracted prototype logic,
+  but give the draft flow (start → nominate → bid → timeout → award →
+  complete) a real end-to-end runthrough with two accounts before trusting
+  it with an actual league.

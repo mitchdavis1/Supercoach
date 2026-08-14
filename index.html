@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spring Racing Carnival SuperStable — Fantasy Horse Racing Game</title>
+<link rel="stylesheet" href="css/styles.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+
+<!-- ══ LOGIN GATE — must sign in to access the platform ══ -->
+<div class="join-outer" id="authGate" style="min-height:100vh;">
+  <div class="join-card">
+    <div class="join-emblem">🏇</div>
+    <div class="join-title">Spring Racing Carnival SuperStable</div>
+    <div class="join-sub">Sign in to access your stable, or create an account to get started</div>
+
+    <div class="join-tabs">
+      <div class="join-tab active" id="atab-signin" onclick="switchAuthTab('signin')">Sign In</div>
+      <div class="join-tab"        id="atab-join"   onclick="switchAuthTab('join')">Create Account</div>
+    </div>
+
+    <div class="auth-error" id="authError"></div>
+
+    <div id="aform-signin">
+      <label class="join-label">Username</label>
+      <input class="join-input" type="text" id="authSigninUsername" placeholder="e.g. SpringKing_Melb" />
+      <label class="join-label">Password</label>
+      <input class="join-input" type="password" id="authSigninPassword" placeholder="Enter your password" />
+      <button class="join-btn" onclick="handleSignIn()">Sign In</button>
+      <div class="join-signup-prompt">
+        New here? <a onclick="switchAuthTab('join')">Create an account →</a>
+      </div>
+    </div>
+
+    <div id="aform-join" style="display:none">
+      <label class="join-label">Choose a Username</label>
+      <input class="join-input" type="text" id="authJoinUsername" placeholder="e.g. SpringKing_Melb" />
+      <label class="join-label">Email Address</label>
+      <input class="join-input" type="email" id="authJoinEmail" placeholder="you@email.com" />
+      <label class="join-label">Password</label>
+      <input class="join-input" type="password" id="authJoinPassword" placeholder="Create a password" />
+      <button class="join-btn" onclick="handleJoin()">Create Account</button>
+      <div class="join-signup-prompt">
+        Already have an account? <a onclick="switchAuthTab('signin')">Sign in →</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MAIN APP — hidden until signed in ══ -->
+<div id="appShell" style="display:none;">
+
+<div class="header">
+  <div class="logo-wrap">
+    <div class="logo-emblem">🏇</div>
+    <div>
+      <div class="logo-title">Spring Racing Carnival SuperStable</div>
+      <div class="logo-sub">Fantasy Horse Racing Game</div>
+    </div>
+  </div>
+  <div class="header-centre" style="display:flex;align-items:center;gap:12px;">
+    <span style="color:#FFD6EC;font-size:12px;font-weight:700;">👤 <span id="userBadgeName"></span></span>
+    <button onclick="logout()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.35);color:#fff;border-radius:6px;padding:7px 14px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;text-transform:uppercase;letter-spacing:0.5px;">Log Out</button>
+  </div>
+</div>
+
+<div class="round-bar">
+  <span class="round-detail">Spring Racing Carnival 2026</span>
+  <div class="round-spacer"></div>
+  <div class="deadline">Selections lock <strong>5:00 PM AEDT · Fri 28 Aug 2026</strong></div>
+</div>
+
+<!-- TOP NAV -->
+<div class="top-nav">
+  <div class="top-nav-tab active" id="nav-draft"        onclick="showPage('draft')">🔨 Draft Room</div>
+  <div class="top-nav-tab"        id="nav-myteam"        onclick="showPage('myteam')">🏇 My Stable</div>
+  <div class="top-nav-tab"        id="nav-transfer"     onclick="showPage('transfer')">🔄 Stable Transfer</div>
+  <div class="top-nav-tab"        id="nav-leaderboard"  onclick="showPage('leaderboard')">🏆 Leaderboard</div>
+  <div class="top-nav-tab"        id="nav-joinleague"   onclick="showPage('joinleague')">🔗 Join A League</div>
+  <div class="top-nav-tab"        id="nav-rules"        onclick="showPage('rules')">📋 Rules &amp; Scoring</div>
+  <div class="top-nav-tab"        id="nav-inplay"       onclick="showPage('inplay')">📋 My Stable — Acceptances</div>
+  <div class="top-nav-tab"        id="nav-dataimport"   onclick="showPage('dataimport')" style="color:#c070a0;display:none;">🗂️ Data Import (Admin)</div>
+</div>
+
+<!-- ══ PAGE: MY STABLE (read-only — built via the Draft Room) ══ -->
+<div class="page" id="page-myteam">
+
+  <div class="budget-bar-row">
+    <div class="budget-bar-inner">
+      <div class="budget-bar-label">Salary Cap Spent</div>
+      <div class="budget-bar-amount" id="budgetDisplay">$0</div>
+      <div class="budget-bar-of">of $100</div>
+    </div>
+    <div class="budget-bar-track">
+      <div class="budget-bar-fill" id="budgetBar" style="width:0%"></div>
+    </div>
+  </div>
+
+  <div class="myteam-outer">
+    <div class="myteam-container" id="myteamContainer">
+      <!-- populated by renderMyStablePage() -->
+    </div>
+  </div>
+</div>
+
+<!-- ══ PAGE: DRAFT ROOM ══ -->
+<div class="page active" id="page-draft">
+  <div class="draft-outer">
+    <div class="draft-container">
+
+      <div class="draft-hero">
+        <div>
+          <div class="draft-hero-title">🔨 Live Auction Draft</div>
+          <div class="draft-hero-sub" id="draftHeroSub">Nominate horses and build your stable in this live auction draft — $100 cap, 10 horses, no bench.</div>
+        </div>
+        <div class="draft-hero-stat"><div class="draft-hero-stat-val" id="draftYourBudget">$100</div><div class="draft-hero-stat-label">Your Cap Left</div></div>
+        <div class="draft-hero-stat"><div class="draft-hero-stat-val" id="draftYourSlots">0/10</div><div class="draft-hero-stat-label">Horses Won</div></div>
+        <div class="draft-hero-btns">
+          <button class="draft-start-btn" id="draftStartBtn" onclick="startDraft()">Start Draft</button>
+        </div>
+      </div>
+
+      <div id="draftBody"></div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══ PAGE: LEADERBOARD ══ -->
+<div class="page" id="page-leaderboard">
+  <div class="lb-container">
+
+    <div class="lb-hero">
+      <div class="lb-hero-rank" id="lbHeroRank">#—</div>
+      <div class="lb-hero-info">
+        <div class="lb-hero-label">Your Standing</div>
+        <div class="lb-hero-name" id="lbHeroName">—</div>
+      </div>
+      <div class="lb-hero-score">
+        <div class="lb-hero-pts" id="lbHeroPts">$0</div>
+        <div class="lb-hero-pts-label">total earnings</div>
+      </div>
+    </div>
+
+    <div class="lb-meta-row">
+      <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+        <label style="font-size:11px;font-weight:700;color:#7080b0;text-transform:uppercase;letter-spacing:0.5px;">Filter:</label>
+        <select id="lbRoundSelect" onchange="setLbRound(this.value)" style="background:#fff;border:1.5px solid #FFD6EC;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;color:#1A1F5E;cursor:pointer;font-family:inherit;outline:none;">
+          <option value="full">Full Season</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="lb-table">
+      <div class="lb-table-header">
+        <div>Rank</div>
+        <div></div>
+        <div>Manager</div>
+        <div>Top Horse</div>
+        <div style="text-align:right">Earnings</div>
+        <div style="text-align:center">Move</div>
+      </div>
+      <div id="lbRows"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PAGE: RULES & SCORING ══ -->
+<div class="page" id="page-rules">
+  <div class="rules-outer">
+    <div class="rules-container">
+
+      <div class="rules-hero">
+        <div class="rules-hero-icon">📋</div>
+        <div>
+          <div class="rules-hero-title">Rules &amp; Scoring</div>
+        </div>
+      </div>
+
+      <div class="rules-grid">
+
+        <div class="rules-card rules-card-full">
+          <div class="rules-card-header">🏇 How It Works</div>
+          <div class="rules-card-body">
+            <p>Spring Racing Carnival SuperStable is a fantasy game based on the real prizemoney earned during Victoria's Spring Racing Carnival — from Memsie Stakes Day at Caulfield (29 August) through to C.F. Orr Stakes Day at Caulfield (14 November). You build a stable of horses within a fixed salary cap by winning them in a live auction draft against rival managers. Horses score 100% of their prizemoney, so every dollar your stable earns on track is a dollar on your scoreboard.</p>
+          </div>
+        </div>
+
+        <div class="rules-card">
+          <div class="rules-card-header">👥 Stable Structure</div>
+          <div class="rules-card-body">
+            <div class="rules-row"><span class="rules-icon">🐎</span><div><strong>10 Horses</strong><div class="rules-sub">Your whole stable, won in the live auction draft. Every horse scores based on <strong>100%</strong> of prizemoney earned across the carnival — there's no bench, so every pick counts every week. Horses can be transferred in and out during the season — see Stable Transfer rules below.</div></div></div>
+          </div>
+        </div>
+
+        <div class="rules-card">
+          <div class="rules-card-header">💰 Prizemoney Splits</div>
+          <div class="rules-card-body">
+            <p style="margin-bottom:14px">Scoring is derived from real prizemoney distributed across the Spring Racing Carnival:</p>
+            <div class="rules-split-row"><div class="rules-split-pct" style="background:#E8007D">100%</div><div><strong>Horses</strong><div class="rules-sub">Your horse selections score the full prizemoney value earned across the carnival</div></div></div>
+          </div>
+        </div>
+
+        <div class="rules-card">
+          <div class="rules-card-header">⭐ The Captain</div>
+          <div class="rules-card-body">
+            <p>One horse in your stable is designated your <strong>Captain</strong>. Your Captain's prizemoney is multiplied by <strong>2×</strong>, making it the most important selection decision you make.</p>
+            <div class="rules-callout">
+              <div class="rules-callout-example">Example: If your Captain earns <strong>$3M</strong> in prizemoney, their score is doubled to <strong>$6M</strong>.</div>
+            </div>
+            <p style="margin-top:12px">Change your Captain any time from My Stable. You can also designate a <strong>Vice Captain</strong>.</p>
+          </div>
+        </div>
+
+        <div class="rules-card">
+          <div class="rules-card-header">💵 Salary Cap</div>
+          <div class="rules-card-body">
+            <div class="rules-row"><span class="rules-icon">💰</span><div><strong>Salary Cap: $100</strong><div class="rules-sub">This is the cap every manager drafts with — spend it winning bids on your 10 horses in the live auction draft</div></div></div>
+            <div class="rules-row"><span class="rules-icon">📊</span><div><strong>Horse Pricing</strong><div class="rules-sub">Horses have no preset price. Every horse opens the auction at $1 and the market decides what it's worth</div></div></div>
+            <div class="rules-row"><span class="rules-icon">🚫</span><div><strong>No Overspending</strong><div class="rules-sub">You cannot bid more than your remaining cap during the draft, once at least $1 is set aside for every remaining empty slot</div></div></div>
+          </div>
+        </div>
+
+        <div class="rules-card">
+          <div class="rules-card-header">🏆 Leagues &amp; Leaderboard</div>
+          <div class="rules-card-body">
+            <div class="rules-row"><span class="rules-icon">🔗</span><div><strong>Join a League</strong><div class="rules-sub">Use a league code shared by your league admin to join a private competition against friends or colleagues</div></div></div>
+            <div class="rules-row"><span class="rules-icon">📈</span><div><strong>Live Rankings</strong><div class="rules-sub">The leaderboard updates in real time as your league mates' stables score</div></div></div>
+          </div>
+        </div>
+
+        <div class="rules-card rules-card-full">
+          <div class="rules-card-header">🔄 Stable Transfers — Horses Only</div>
+          <div class="rules-card-body">
+            <div class="rules-row"><span class="rules-icon">🐎</span><div><strong>One Horse Transfer Per Week</strong><div class="rules-sub">You may swap out one horse from your stable each week. Transfers close at <strong>5:00 PM AEDT on the Friday</strong> before that week's feature race day.</div></div></div>
+            <div class="rules-row"><span class="rules-icon">💰</span><div><strong>Cap Allocation</strong><div class="rules-sub">The incoming horse simply inherits the cap you had allocated to the outgoing horse — your total cap spend doesn't change on a transfer.</div></div></div>
+            <div class="rules-row"><span class="rules-icon">⏩</span><div><strong>Unused Transfers Don't Roll Over</strong><div class="rules-sub">If you don't use your weekly horse transfer, it lapses.</div></div></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PAGE: STABLE TRANSFER ══ -->
+<div class="page" id="page-transfer">
+  <div class="transfer-outer">
+    <div class="transfer-container">
+
+      <div class="transfer-hero">
+        <div class="transfer-hero-icon">🔄</div>
+        <div>
+          <div class="transfer-hero-title">Stable Transfer</div>
+          <div class="transfer-hero-sub">Swap one <strong style="color:#FFD6EC;">horse</strong> per week, prior to that week's Friday 5pm AEDT deadline · Salary cap always applies</div>
+        </div>
+        <div class="transfer-hero-right">
+          <div class="transfer-allowance" id="transferAllowanceDisplay">1</div>
+          <div class="transfer-allowance-label">Trade Available</div>
+        </div>
+      </div>
+
+      <div class="transfer-week-bar">
+        <span class="week-pill" id="currentWeekPill">Week 1</span>
+        <span class="week-deadline">Transfer deadline: <strong id="currentDeadlineDisplay">—</strong></span>
+        <div class="week-status">
+          <div class="week-status-dot" id="weekStatusDot"></div>
+          <span class="week-status-text" id="weekStatusText"></span>
+        </div>
+      </div>
+
+      <div class="transfer-layout">
+
+        <div class="transfer-panel">
+          <div class="transfer-panel-header out">
+            ⬆️ Step 1 — Select horse to transfer OUT
+          </div>
+          <div class="transfer-panel-body">
+            <div id="transferCurrentStable" class="current-stable-list"></div>
+          </div>
+        </div>
+
+        <div class="transfer-panel">
+          <div class="transfer-panel-header in">
+            ⬇️ Step 2 — Select replacement horse to transfer IN
+          </div>
+          <div class="transfer-panel-body">
+            <div id="transferInPanel">
+              <div class="transfer-empty">
+                <div class="transfer-empty-icon">👆</div>
+                Select a horse to transfer out first
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="transfer-confirm-strip" id="transferConfirmStrip" style="display:none">
+        <span class="confirm-arrow">🔄</span>
+        <div class="confirm-players">
+          <div class="confirm-chip out" id="confirmChipOut">—</div>
+          <span style="color:#E8007D;font-weight:900;font-size:18px;">→</span>
+          <div class="confirm-chip in" id="confirmChipIn">—</div>
+        </div>
+        <span class="confirm-budget-note" id="confirmBudgetNote"></span>
+        <button class="confirm-btn" id="confirmTransferBtn" onclick="confirmTransfer()">Confirm Transfer</button>
+      </div>
+
+      <div class="transfer-log">
+        <div class="transfer-log-title">Transfer History</div>
+        <div id="transferLogList">
+          <div class="transfer-empty" style="padding:20px">
+            <div class="transfer-empty-icon">📋</div>
+            No transfers made yet this season
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══ PAGE: JOIN A LEAGUE ══ -->
+<div class="page" id="page-joinleague">
+  <div class="league-outer">
+    <div class="league-container" id="leagueContainer"><!-- populated by renderLeaguePage() --></div>
+  </div>
+</div>
+
+<!-- ══ PAGE: MY STABLE — IN PLAY ══ -->
+<div class="page" id="page-inplay">
+  <div class="inplay-container" id="inplayContent"></div>
+</div>
+
+<!-- ══ PAGE: DATA IMPORT (ADMIN) ══ -->
+<div class="page" id="page-dataimport">
+  <div class="admin-outer">
+    <div class="admin-container">
+
+      <div class="admin-banner">
+        🗂️ <strong>Admin tool.</strong> This imports horse pool names, weekly acceptances, and results into the draftable pool and live scoring. Only visible to accounts with <code>is_admin = true</code>.
+      </div>
+
+      <div class="admin-stat-row">
+        <div class="admin-stat-box"><div class="admin-stat-val" id="adminStatHorses">0</div><div class="admin-stat-label">Horses in pool</div></div>
+        <div class="admin-stat-box"><div class="admin-stat-val" id="adminStatRacing">0</div><div class="admin-stat-label">Set for this week</div></div>
+        <div class="admin-stat-box"><div class="admin-stat-val" id="adminStatEarning">0</div><div class="admin-stat-label">Horses with earnings</div></div>
+      </div>
+
+      <div class="admin-card">
+        <div class="admin-card-header">🐎 Horse Pool Import</div>
+        <div class="admin-card-sub">Upload a spreadsheet of horse names to add to the draftable pool — a <code>horse_name</code> (or just "horse") column is all that's required. Optional columns for <code>trainer</code>, <code>key_races</code>, <code>tags</code> (comma list, e.g. gr1,cup,mare) and <code>notes</code> will be used if present. This never removes or overwrites existing horses — only adds names it hasn't seen before.</div>
+        <div class="admin-file-row">
+          <input type="file" id="horsePoolFileInput" class="admin-file-input" accept=".xlsx,.xls,.csv" />
+          <button class="admin-import-btn" onclick="handleHorsePoolFile()">Import Horse Pool</button>
+        </div>
+        <div id="horsePoolImportResult"></div>
+      </div>
+
+      <div class="admin-card">
+        <div class="admin-card-header">📋 Weekly Acceptances Import</div>
+        <div class="admin-card-sub">Upload the acceptances export (date, venue, race number, horse name). This replaces "this week's" racing list and auto-adds any horse name not already in the pool. Horses have no preset price — every horse opens the auction at $1 and the market sets the value.</div>
+        <div class="admin-file-row">
+          <input type="file" id="acceptancesFileInput" class="admin-file-input" accept=".xlsx,.xls,.csv" />
+          <button class="admin-import-btn" onclick="handleAcceptancesFile()">Import Acceptances</button>
+        </div>
+        <div id="acceptancesImportResult"></div>
+      </div>
+
+      <div class="admin-card">
+        <div class="admin-card-header">🏆 Cumulative Prizemoney Import</div>
+        <div class="admin-card-sub">Same layout as acceptances, plus a prizemoney column (name it anything containing "prize", e.g. <code>prizemoney_won</code>). This should be each horse's <strong>running season-to-date total</strong>, not just fresh winnings — importing a later export <strong>replaces</strong> the stored figure, so it's always safe to re-import the latest full cumulative file.</div>
+        <div class="admin-file-row">
+          <input type="file" id="resultsFileInput" class="admin-file-input" accept=".xlsx,.xls,.csv" />
+          <button class="admin-import-btn" onclick="handleResultsFile()">Import Results</button>
+        </div>
+        <div id="resultsImportResult"></div>
+      </div>
+
+      <div class="admin-card">
+        <div class="admin-card-header">⚠️ Reset Imported Data</div>
+        <div class="admin-card-sub">Clears every horse, this-week race, and earnings total added via import — useful for testing.</div>
+        <span class="admin-reset-link" onclick="resetImportedData()">↺ Clear all imported data</span>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="branding-strip"><span>Spring Racing Carnival SuperStable</span> · Fantasy Horse Racing Game · 2026</div>
+
+</div><!-- end appShell -->
+
+<script src="js/config.js"></script>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
