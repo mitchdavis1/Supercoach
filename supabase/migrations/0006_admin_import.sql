@@ -76,9 +76,10 @@ begin
     )
     returning id
   )
-  select count(*) into v_created from inserted;
-
-  select count(*) into v_total from input;
+  select
+    (select count(*) from inserted),
+    (select count(*) from input)
+  into v_created, v_total;
 
   return jsonb_build_object('created', v_created, 'matched', v_total - v_created, 'total', v_total);
 end;
