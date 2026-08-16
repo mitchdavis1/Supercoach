@@ -386,6 +386,16 @@
         <span class="admin-reset-link" onclick="resetImportedData()">↺ Clear all imported data</span>
       </div>
 
+      <div class="admin-card">
+        <div class="admin-card-header">🔄 Reset League Draft</div>
+        <div class="admin-card-sub">Wipes a league's drafted horses, stables, and transfers, and resets its draft back to idle so you can re-run it for testing. The league itself and its members stay intact. Enter the league's join code.</div>
+        <div class="admin-file-row">
+          <input type="text" id="resetLeagueCodeInput" class="join-input" placeholder="League code, e.g. AB12CD" style="max-width:200px;text-transform:uppercase;" />
+          <span class="admin-reset-link" onclick="resetLeagueDraft()">↺ Reset league draft</span>
+        </div>
+        <div id="resetLeagueResult"></div>
+      </div>
+
     </div>
   </div>
 </div>

@@ -52,12 +52,21 @@ legacy/                  The original prototype + migration brief, for reference
 
 1. Create a project at [supabase.com](https://supabase.com).
 2. In the SQL Editor, run each file in `supabase/migrations/` **in order**
-   (0001 → 0007). They're plain SQL, so `supabase db push` via the CLI works
+   (0001 → 0011). They're plain SQL, so `supabase db push` via the CLI works
    too if you prefer.
 3. In Authentication → Providers, email/password should already be enabled
    by default. Decide whether you want "Confirm email" on — if it's on,
    `handleJoin()` in `auth.js` already handles the "check your email"
    case; if it's off, new accounts sign in immediately after creating one.
+4. **If "Confirm email" is on**, also set Authentication → URL Configuration
+   → **Site URL** to your deployed URL (e.g.
+   `https://your-user.github.io/your-repo/`) and add it to **Redirect
+   URLs**. Supabase defaults Site URL to `http://localhost:3000`, so
+   confirmation emails sent before this is changed will link somewhere
+   that doesn't exist — the confirmation itself is still valid, only the
+   landing page is wrong. Anyone who signed up before this was set needs a
+   fresh confirmation email (or you can flip "Confirm email" off and skip
+   this entirely for a small friend league).
 
 ### 2. Point the frontend at your project
 
@@ -86,7 +95,15 @@ update public.profiles set is_admin = true where username = 'your-username';
 
 Then use the Data Import tab to upload a horse pool spreadsheet (a column
 containing "horse" in its header is all that's required) before anyone
-tries to start a draft — `start_draft()` will reject an empty pool.
+tries to start a draft — `start_draft()` will reject an empty pool. The
+nomination search box only renders results once you start typing (it's
+searching the whole pool, not just what's visible) — with a large pool
+this avoids the list looking like it's stuck on whatever sorts first.
+
+The same page has a **Reset League Draft** tool (admin-only) for testing —
+enter a league's join code to wipe its drafted horses, stables, and
+transfers and reset that league's draft back to idle, without touching the
+league or its members.
 
 ### 4. Deploy the frontend
 
@@ -102,8 +119,8 @@ It's a static site — no build step. Any of these work:
 2. Optionally schedule a draft time — the manager can always start early or
    with no schedule set; everyone else has to wait for the scheduled time.
 3. Start Draft. The nominator rotates in join order; nominating a horse
-   opens it at a $1 bid in your name; the 10s bid clock resets on every
-   raise; a 20s nomination clock auto-nominates a random horse if the
+   opens it at a $1 bid in your name; the 20s bid clock resets on every
+   raise; a 30s nomination clock auto-nominates a random horse if the
    person on the clock doesn't act in time. Nobody needs to keep a tab open
    for the clock to resolve — every RPC call (anyone bidding, nominating,
    or just calling `advance_draft`) checks and resolves an expired clock

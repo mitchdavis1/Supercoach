@@ -2,8 +2,8 @@ import { supabase } from './supabaseClient.js';
 import { state, getActiveLeague, fmtMoney } from './state.js';
 
 const SLOTS_TOTAL = 10;
-const NOM_SECONDS = 20;
-const BID_SECONDS = 10;
+const NOM_SECONDS = 30;
+const BID_SECONDS = 20;
 
 let draftChannel = null;
 let clockInterval = null;
@@ -294,7 +294,14 @@ function renderNominationList() {
   const list = document.getElementById('nominateList');
   if (!list) return;
   const search = (document.getElementById('nominateSearch')?.value || '').toLowerCase();
-  const horses = availableHorses().filter((h) => h.name.toLowerCase().includes(search)).slice(0, 200);
+  const pool = availableHorses();
+
+  if (!search) {
+    list.innerHTML = `<div class="draft-waiting">Type to search ${pool.length.toLocaleString()} available horses…</div>`;
+    return;
+  }
+
+  const horses = pool.filter((h) => h.name.toLowerCase().includes(search)).slice(0, 200);
   list.innerHTML = horses.map((h) => `
     <div class="draft-nom-row" onclick="nominateHorse('${h.id}')">
       <div class="spr-avatar horse">${h.emoji || '🐎'}</div>

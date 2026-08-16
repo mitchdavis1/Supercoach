@@ -1,63 +1,15 @@
--- Server-authoritative auction draft engine.
+-- Two fixes to the draft engine:
 --
--- Economics carried over exactly from the prototype (src-supercoach-v5.html):
---   - $100 salary cap, 10 horses per stable, no bench
---   - every horse opens the auction at a $1 bid, placed automatically in the
---     nominator's name the instant they nominate
---   - bid clock is 20s and RESETS on every accepted bid (soft close)
---   - nomination clock is 30s; on expiry the on-the-clock manager
---     auto-nominates a random available horse (not a skip/pass)
---   - minimum raise is $1, but a manager may jump straight to any higher
---     amount as long as it's within their max bid
---   - maxBid = budget - reserve, where reserve = $1 for every OTHER empty
---     slot (10 total, minus horses already won, minus the slot being bid on)
+-- 1. place_bid() never checked whether the bidder's own stable was already
+--    full before accepting a bid — league_budget()'s max_bid alone doesn't
+--    block this, since a full reserve of $0 for zero remaining slots still
+--    permits a max_bid up to the whole remaining cap-space. This let a
+--    manager win an 11th horse. Now rejected up front via remaining_slots.
 --
--- Every mutating action funnels through advance_draft_if_expired() first so
--- an expired clock is always resolved server-side before any new action is
--- allowed to proceed — this is what makes the clock authoritative even
--- though there's no separate scheduled job ticking it.
+-- 2. Bid clock 10s -> 20s, nomination clock 20s -> 30s, across start_draft,
+--    advance_draft_if_expired, and nominate_horse.
 
-create table public.season_weeks (
-  week_number int primary key,
-  label text not null,
-  deadline timestamptz not null
-);
-
--- Spring Racing Carnival 2026 schedule, Friday 5pm AEDT deadlines,
--- carried over verbatim from the prototype's TRANSFER_WEEKS constant.
-insert into public.season_weeks (week_number, label, deadline) values
-  (1, 'Week 1 — Memsie–Makybe Diva', '2026-09-04T07:00:00Z'),
-  (2, 'Week 2', '2026-09-11T07:00:00Z'),
-  (3, 'Week 3', '2026-09-18T07:00:00Z'),
-  (4, 'Week 4', '2026-09-25T07:00:00Z'),
-  (5, 'Week 5', '2026-10-02T07:00:00Z'),
-  (6, 'Week 6', '2026-10-16T07:00:00Z'),
-  (7, 'Week 7', '2026-10-23T07:00:00Z'),
-  (8, 'Week 8', '2026-10-30T07:00:00Z'),
-  (9, 'Week 9', '2026-11-13T07:00:00Z');
-
-alter table public.season_weeks enable row level security;
-
-create policy "season weeks are viewable by any authenticated user"
-  on public.season_weeks for select
-  to authenticated
-  using (true);
-
-create function public.get_current_week()
-returns public.season_weeks
-language sql
-stable
-as $$
-  select * from public.season_weeks where deadline > now() order by week_number asc limit 1;
-$$;
-
-grant execute on function public.get_current_week() to authenticated;
-
--- ----------------------------------------------------------------------------
--- start_draft — gating logic ported verbatim from startDraft() in the prototype
--- ----------------------------------------------------------------------------
-
-create function public.start_draft(p_league_id uuid)
+create or replace function public.start_draft(p_league_id uuid)
 returns public.league_draft_state
 language plpgsql
 security definer set search_path = public
@@ -118,14 +70,7 @@ begin
 end;
 $$;
 
--- ----------------------------------------------------------------------------
--- advance_draft_if_expired — resolves an expired nomination/bid clock.
--- Called internally by nominate_horse/place_bid before they act, and exposed
--- directly as advance_draft() so a client (or a poller) can tick the clock
--- even when nobody is actively bidding.
--- ----------------------------------------------------------------------------
-
-create function public.advance_draft_if_expired(p_league_id uuid)
+create or replace function public.advance_draft_if_expired(p_league_id uuid)
 returns public.league_draft_state
 language plpgsql
 security definer set search_path = public
@@ -242,21 +187,7 @@ begin
 end;
 $$;
 
-create function public.advance_draft(p_league_id uuid)
-returns public.league_draft_state
-language sql
-security definer set search_path = public
-as $$
-  select public.advance_draft_if_expired(p_league_id);
-$$;
-
--- ----------------------------------------------------------------------------
--- nominate_horse — only the current nominator may call, and only during
--- 'nominating'. Opens the lot with the nominator as the automatic $1 bidder,
--- exactly like openLotForBidding() in the prototype.
--- ----------------------------------------------------------------------------
-
-create function public.nominate_horse(p_league_id uuid, p_horse_id uuid)
+create or replace function public.nominate_horse(p_league_id uuid, p_horse_id uuid)
 returns public.league_draft_state
 language plpgsql
 security definer set search_path = public
@@ -299,15 +230,7 @@ begin
 end;
 $$;
 
--- ----------------------------------------------------------------------------
--- place_bid — minimum raise is $1 above current_bid, but a manager may name
--- any higher amount up to their max bid. Resets the 20s bid clock on success.
--- A bidder whose stable is already full (10/10) cannot bid — league_budget()
--- alone doesn't block this, since a full reserve of $0 for zero remaining
--- slots still allows a max_bid up to the full remaining cap-space.
--- ----------------------------------------------------------------------------
-
-create function public.place_bid(p_league_id uuid, p_bid_amount int default null)
+create or replace function public.place_bid(p_league_id uuid, p_bid_amount int default null)
 returns public.league_draft_state
 language plpgsql
 security definer set search_path = public
@@ -362,8 +285,3 @@ begin
   return v_state;
 end;
 $$;
-
-grant execute on function public.start_draft(uuid) to authenticated;
-grant execute on function public.advance_draft(uuid) to authenticated;
-grant execute on function public.nominate_horse(uuid, uuid) to authenticated;
-grant execute on function public.place_bid(uuid, int) to authenticated;
