@@ -66,10 +66,6 @@
 .spr-price { font-size: 12px; font-weight: 800; color: #E8007D; flex-shrink: 0; }
 
 .out-badge { background: #cc3344; color: #fff; font-size: 8px; font-weight: 900; padding: 2px 6px; border-radius: 3px; text-transform: uppercase; flex-shrink: 0; }
-.captain-lock { background: #1A1F5E; color: #FFD6EC; font-size: 8px; font-weight: 900; padding: 2px 6px; border-radius: 3px; text-transform: uppercase; flex-shrink: 0; }
-.set-captain-btn { background: transparent; border: 1.5px solid #c0c8ff; color: #6070cc; font-size: 9px; font-weight: 800; padding: 2px 7px; border-radius: 4px; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; font-family: inherit; transition: all 0.2s; flex-shrink: 0; }
-.set-captain-btn { display:none; } /* replaced by drag-drop */
-.set-vc-btn      { display:none; } /* replaced by drag-drop */
 .active-to-bench-btn { background: transparent; border: 1.5px solid #b0a0d0; color: #8070b0; font-size: 9px; font-weight: 800; padding: 2px 7px; border-radius: 4px; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; font-family: inherit; transition: all 0.2s; flex-shrink: 0; }
 .active-to-bench-btn:hover { background: #8070b0; border-color: #8070b0; color: #fff; }
 .active-to-bench-btn.pending { background: #1A1F5E; border-color: #1A1F5E; color: #FFD6EC; }
@@ -80,14 +76,6 @@
 .team-slot[draggable="true"] { cursor: grab; }
 .team-slot[draggable="true"]:active { cursor: grabbing; }
 .team-slot.drag-over { outline: 2px dashed #E8007D; outline-offset: 2px; background: #FFF0F8 !important; }
-.team-slot.captain { border-color: #C9A227 !important; border-width: 2px !important; background: #FFFBEF !important; }
-.team-slot.vc      { border-color: #9090a0 !important; border-width: 2px !important; background: #F6F6F8 !important; }
-.slot-role-label { font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; width: 22px; text-align: center; flex-shrink: 0; }
-.slot-role-label.cap  { color: #C9A227; }
-.slot-role-label.vc   { color: #9090a0; }
-.slot-role-label.open { color: #d0c8e0; }
-.vc-badge { background: #2D3480; color: #fff; font-size: 8px; font-weight: 900; padding: 1px 5px; border-radius: 3px; text-transform: uppercase; letter-spacing: 0.5px; margin-left: 4px; }
-.team-slot.vc { border-color: #2D3480 !important; border-width: 2px !important; background: #F0F4FF !important; }
 .team-slot.bench-slot { border-color: #c0b8d8; background: #F8F6FF; }
 .team-slot.bench-slot.filled { border-color: #9080c0; background: #F0ECF8; }
 .bench-to-active-btn { background: transparent; border: 1.5px solid #9080c0; color: #7060a0; font-size: 9px; font-weight: 800; padding: 2px 7px; border-radius: 4px; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; font-family: inherit; transition: all 0.2s; flex-shrink: 0; }
@@ -220,7 +208,6 @@ body { background: #FFF5FA; color: #1A1F5E; min-height: 100vh; font-family: 'Int
 .team-slot { background: #FFF5FA; border: 1px dashed #f0a0cc; border-radius: 8px; padding: 8px 10px; margin-bottom: 5px; display: flex; align-items: center; gap: 9px; cursor: pointer; transition: all 0.2s; min-height: 50px; }
 .team-slot.filled { border: 1.5px solid #E8007D; background: #FFF0F8; }
 .team-slot.filled:hover { border-color: #1A1F5E; }
-.team-slot.captain { border-color: #1A1F5E !important; border-width: 2px !important; background: #EEF0FF !important; }
 
 .slot-avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
 .slot-avatar.empty { background: #FFD6EC; color: #E8007D; font-size: 16px; }
@@ -232,7 +219,6 @@ body { background: #FFF5FA; color: #1A1F5E; min-height: 100vh; font-family: 'Int
 .slot-name { font-size: 12px; font-weight: 700; color: #1A1F5E; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .slot-meta { font-size: 10px; color: #E8007D; }
 .slot-empty-text { font-size: 11px; color: #c070a0; }
-.captain-badge { background: #1A1F5E; color: #fff; font-size: 8px; font-weight: 900; padding: 1px 5px; border-radius: 3px; text-transform: uppercase; letter-spacing: 0.5px; margin-left: 4px; }
 .remove-btn { color: #f0a0cc; font-size: 14px; cursor: pointer; padding: 3px 6px; border-radius: 4px; transition: all 0.2s; flex-shrink: 0; }
 .remove-btn:hover { color: #E8007D; background: #FFD6EC; }
 
@@ -364,7 +350,6 @@ body { background: #FFF5FA; color: #1A1F5E; min-height: 100vh; font-family: 'Int
   align-items: center; gap: 12px;
 }
 .inplay-card.racing { border-color: #E8007D; border-width: 2px; }
-.inplay-card.captain-card { border-color: #C9A227; border-width: 2px; background: #FFFBEF; }
 .inplay-card.na-card { opacity: 0.6; }
 
 .inplay-avatar { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #E8007D, #C4006A); display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
@@ -373,8 +358,6 @@ body { background: #FFF5FA; color: #1A1F5E; min-height: 100vh; font-family: 'Int
 
 .inplay-horse-name { font-size: 14px; font-weight: 800; color: #1A1F5E; }
 .inplay-horse-meta { font-size: 11px; color: #7080b0; margin-top: 2px; }
-.inplay-cap-badge { display: inline-block; background: #C9A227; color: #fff; font-size: 8px; font-weight: 900; padding: 1px 5px; border-radius: 3px; text-transform: uppercase; margin-left: 5px; vertical-align: middle; }
-.inplay-vc-badge  { display: inline-block; background: #9090a0; color: #fff; font-size: 8px; font-weight: 900; padding: 1px 5px; border-radius: 3px; text-transform: uppercase; margin-left: 5px; vertical-align: middle; }
 
 .inplay-race-col { }
 .inplay-race-name { font-size: 12px; font-weight: 700; color: #1A1F5E; }
@@ -481,7 +464,7 @@ body { background: #FFF5FA; color: #1A1F5E; min-height: 100vh; font-family: 'Int
 
 .lb-table { background: #fff; border-radius: 12px; border: 1.5px solid #FFD6EC; overflow: hidden; }
 .lb-table-header { display: grid; grid-template-columns: 52px 36px 1fr 180px 110px 90px; align-items: center; padding: 10px 16px; background: #1A1F5E; font-size: 9px; font-weight: 700; color: #aab0e8; text-transform: uppercase; letter-spacing: 1px; gap: 12px; }
-.lb-row { display: grid; grid-template-columns: 52px 36px 1fr 180px 110px 90px; align-items: center; padding: 12px 16px; border-bottom: 1px solid #FFF0F8; transition: background 0.15s; gap: 12px; }
+.lb-row { display: grid; grid-template-columns: 52px 36px 1fr 110px 90px; align-items: center; padding: 12px 16px; border-bottom: 1px solid #FFF0F8; transition: background 0.15s; gap: 12px; }
 .lb-row:last-child { border-bottom: none; }
 .lb-row:hover { background: #FFF5FA; }
 .lb-row.me { background: #FFF0F8; }
@@ -498,10 +481,6 @@ body { background: #FFF5FA; color: #1A1F5E; min-height: 100vh; font-family: 'Int
 .lb-username { font-size: 13px; font-weight: 700; color: #1A1F5E; }
 .lb-username.me-label::after { content: '  (You)'; color: #E8007D; font-size: 11px; font-weight: 600; }
 .lb-team-name { font-size: 10px; color: #7080b0; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-.lb-picks { display: flex; gap: 4px; flex-wrap: wrap; }
-.lb-pick-chip { font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: 700; background: #FFF0F8; color: #E8007D; border: 1px solid #FFD6EC; white-space: nowrap; }
-.lb-pick-chip.captain { background: #1A1F5E; color: #FFD6EC; border-color: #2D3480; }
 
 .lb-score-col { text-align: right; }
 .lb-pts { font-size: 17px; font-weight: 800; color: #E8007D; font-variant-numeric: tabular-nums; }

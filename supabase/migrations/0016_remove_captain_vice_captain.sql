@@ -1,32 +1,15 @@
--- Transfers — one horse swap per league member per week.
---
--- The salary cap only ever applied during the live auction draft — once
--- that's over, dollar value has no bearing on who can trade for what, so
--- the incoming horse's paid_price is always null (not carried over from the
--- outgoing horse).
---
--- Prizemoney baseline + banking: raw cumulative prizemoney totals only mean
--- "what you earned" if you've owned the horse all season. A horse traded in
--- would otherwise bring its whole season's prior earnings with it (unearned
--- by the new owner), and a horse traded out would otherwise vanish from its
--- former owner's score retroactively, including what they earned while they
--- owned it. Fixed by:
---   - every stable row has a baseline_prizemoney, snapshotted at the moment
---     the horse joined that stable (draft award or transfer-in) — a
---     manager's live score from a horse they hold is its current cumulative
---     total minus that baseline, never the raw total;
---   - when a horse leaves a stable, the delta it earned while owned
---     (current total minus its baseline) is banked permanently into that
---     league_members row's banked_earnings, which survives the horse
---     leaving and is never touched again by future roster changes.
---
--- Atomicity/first-come-first-served comes from two unique constraints doing
--- real work inside one transaction: stables(league_id, horse_id) means a
--- second manager racing for the same incoming horse gets a unique_violation,
--- and transfers(league_id, user_id, week_number) means a second attempt at
--- your own weekly transfer also fails outright — no read-then-write gap.
+-- Remove Captain/Vice-Captain entirely. Every horse now scores at a flat
+-- 1x — no more doubling, no more designation, no more carry-over-on-trade
+-- logic for it. This also sidesteps the historical-captain-tracking gap
+-- flagged in the prizemoney baseline/banking migration (captain doubling
+-- applying to whoever holds the role now rather than who held it when
+-- each dollar was earned) since there's no more doubling to misattribute.
 
-create function public.execute_transfer(p_league_id uuid, p_horse_out_id uuid, p_horse_in_id uuid)
+drop function if exists public.set_captain(uuid, uuid);
+drop function if exists public.set_vice_captain(uuid, uuid);
+drop policy if exists "owners can set captain/vice-captain on their own horses" on public.stables;
+
+create or replace function public.execute_transfer(p_league_id uuid, p_horse_out_id uuid, p_horse_in_id uuid)
 returns public.transfers
 language plpgsql
 security definer set search_path = public
@@ -97,4 +80,5 @@ begin
 end;
 $$;
 
-grant execute on function public.execute_transfer(uuid, uuid, uuid) to authenticated;
+alter table public.stables drop column is_captain;
+alter table public.stables drop column is_vice_captain;

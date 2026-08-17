@@ -18,30 +18,6 @@ export async function loadStable(leagueId) {
   state.stable = data || [];
 }
 
-export async function setCaptain(horseId) {
-  const league = getActiveLeague();
-  if (!league) return;
-  const { error } = await supabase.rpc('set_captain', { p_league_id: league.id, p_horse_id: horseId });
-  if (error) {
-    alert(error.message);
-    return;
-  }
-  await loadStable(league.id);
-  renderMyStablePage();
-}
-
-export async function setViceCaptain(horseId) {
-  const league = getActiveLeague();
-  if (!league) return;
-  const { error } = await supabase.rpc('set_vice_captain', { p_league_id: league.id, p_horse_id: horseId });
-  if (error) {
-    alert(error.message);
-    return;
-  }
-  await loadStable(league.id);
-  renderMyStablePage();
-}
-
 export function renderMyStablePage() {
   const container = document.getElementById('myteamContainer');
   const budgetDisplay = document.getElementById('budgetDisplay');
@@ -67,25 +43,18 @@ export function renderMyStablePage() {
     return;
   }
 
-  const rows = state.stable
-    .slice()
-    .sort((a, b) => (b.is_captain - a.is_captain) || (b.is_vice_captain - a.is_vice_captain))
-    .map((s) => {
-      const horse = state.horsesById.get(s.horse_id);
-      const earned = earnedForStableRow(s);
-      const scored = s.is_captain ? earned * 2 : earned;
-      return `
-        <div class="team-slot filled ${s.is_captain ? 'captain' : ''} ${s.is_vice_captain ? 'vc' : ''}">
-          <span class="slot-role-label ${s.is_captain ? 'cap' : s.is_vice_captain ? 'vc' : 'open'}">${s.is_captain ? 'C' : s.is_vice_captain ? 'VC' : ''}</span>
-          <div class="slot-avatar horse">${horse?.emoji || '🐎'}</div>
-          <div class="slot-info">
-            <div class="slot-name">${escapeHtml(horse?.name || 'Horse')}${s.is_captain ? '<span class="captain-badge">Captain</span>' : ''}${s.is_vice_captain ? '<span class="vc-badge">VC</span>' : ''}</div>
-            <div class="slot-meta">${s.paid_price != null ? `$${s.paid_price} paid · ` : ''}${fmtMoney(scored)} ${s.is_captain ? '(Captain ×2)' : 'earned'}</div>
-          </div>
-          <button class="set-captain-btn" style="display:inline-block;" onclick="setCaptain('${s.horse_id}')" title="Set Captain">⭐</button>
-          <button class="set-vc-btn" style="display:inline-block;" onclick="setViceCaptain('${s.horse_id}')" title="Set Vice Captain">🎖️</button>
-        </div>`;
-    }).join('');
+  const rows = state.stable.map((s) => {
+    const horse = state.horsesById.get(s.horse_id);
+    const earned = earnedForStableRow(s);
+    return `
+      <div class="team-slot filled">
+        <div class="slot-avatar horse">${horse?.emoji || '🐎'}</div>
+        <div class="slot-info">
+          <div class="slot-name">${escapeHtml(horse?.name || 'Horse')}</div>
+          <div class="slot-meta">${s.paid_price != null ? `$${s.paid_price} paid · ` : ''}${fmtMoney(earned)} earned</div>
+        </div>
+      </div>`;
+  }).join('');
 
   container.innerHTML = `<div class="section-header">Your Stable (${state.stable.length}/10)</div>${rows}`;
 }

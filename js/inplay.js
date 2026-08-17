@@ -28,19 +28,15 @@ export async function renderInPlay() {
   });
 
   const bankedEarnings = Number(state.members.find((m) => m.user_id === state.session.user.id)?.banked_earnings) || 0;
-  const totalScore = state.stable.reduce((sum, s) => {
-    const earned = earnedForStableRow(s);
-    return sum + (s.is_captain ? Math.round(earned * 2) : earned);
-  }, bankedEarnings);
+  const totalScore = state.stable.reduce((sum, s) => sum + earnedForStableRow(s), bankedEarnings);
 
   const card = ({ s, horse, acc }) => {
     const earned = earnedForStableRow(s);
-    const scored = s.is_captain ? earned * 2 : earned;
     return `
-      <div class="inplay-card ${acc ? 'racing' : 'na-card'} ${s.is_captain ? 'captain-card' : ''}">
+      <div class="inplay-card ${acc ? 'racing' : 'na-card'}">
         <div class="inplay-avatar ${acc ? '' : 'na'}">${horse?.emoji || '🐎'}</div>
         <div>
-          <div class="inplay-horse-name">${escapeHtml(horse?.name || 'Horse')}${s.is_captain ? '<span class="inplay-cap-badge">C</span>' : ''}${s.is_vice_captain ? '<span class="inplay-vc-badge">VC</span>' : ''}</div>
+          <div class="inplay-horse-name">${escapeHtml(horse?.name || 'Horse')}</div>
           <div class="inplay-horse-meta">${escapeHtml(horse?.trainer || '')}</div>
         </div>
         <div class="inplay-race-col">
@@ -48,8 +44,8 @@ export async function renderInPlay() {
         </div>
         <div></div>
         <div class="inplay-score-col">
-          <div class="inplay-earned ${scored ? '' : 'zero'}">${fmtMoney(scored)}</div>
-          <div class="inplay-earned-label">${s.is_captain ? 'captain ×2' : 'earned by you'}</div>
+          <div class="inplay-earned ${earned ? '' : 'zero'}">${fmtMoney(earned)}</div>
+          <div class="inplay-earned-label">earned by you</div>
         </div>
       </div>`;
   };

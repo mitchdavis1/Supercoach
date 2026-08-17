@@ -4,13 +4,13 @@ import { state, getActiveLeague, fmtMoney, earnedForStableRow } from './state.js
 // Scoring: a horse scores 100% of what it's earned since joining this
 // stable (see earnedForStableRow in state.js — not its raw cumulative
 // total, which would otherwise hand a traded-in horse's pre-trade earnings
-// to its new owner); the Captain's contribution is doubled. Plus
-// banked_earnings — money already locked in from horses traded away
-// earlier in the season, which stays with the manager permanently. Ported
-// from computeMyLeaderboardScore() — summed across the whole stable, no
-// per-week breakdown (the prototype never actually implemented weekly
-// scoring; the leaderboard's "Filter by week" selector is preserved as a
-// UI affordance but full-season is the only figure that's real).
+// to its new owner). Plus banked_earnings — money already locked in from
+// horses traded away earlier in the season, which stays with the manager
+// permanently. Ported from computeMyLeaderboardScore() — summed across the
+// whole stable, no per-week breakdown (the prototype never actually
+// implemented weekly scoring; the leaderboard's "Filter by week" selector
+// is preserved as a UI affordance but full-season is the only figure
+// that's real).
 
 export async function loadPrizemoney() {
   const { data, error } = await supabase.from('prizemoney').select('horse_id, total_prizemoney');
@@ -22,10 +22,7 @@ export async function loadPrizemoney() {
 }
 
 function scoreForStable(stableRows, bankedEarnings) {
-  const fromHorses = stableRows.reduce((total, s) => {
-    const earned = earnedForStableRow(s);
-    return total + (s.is_captain ? Math.round(earned * 2) : earned);
-  }, 0);
+  const fromHorses = stableRows.reduce((total, s) => total + earnedForStableRow(s), 0);
   return fromHorses + (Number(bankedEarnings) || 0);
 }
 
@@ -56,13 +53,11 @@ export async function renderLeaderboard() {
 
   const rows = state.members.map((m) => {
     const stable = byUser.get(m.user_id) || [];
-    const captainHorse = stable.find((s) => s.is_captain);
     return {
       userId: m.user_id,
       name: m.profiles?.display_name || m.profiles?.username || 'Manager',
       teamName: m.team_name,
       score: scoreForStable(stable, m.banked_earnings),
-      topHorse: captainHorse ? state.horsesById.get(captainHorse.horse_id)?.name : null,
       stableCount: stable.length,
     };
   }).sort((a, b) => b.score - a.score);
@@ -86,7 +81,6 @@ export async function renderLeaderboard() {
           <div class="lb-username ${isMe ? 'me-label' : ''}">${escapeHtml(r.name)}</div>
           <div class="lb-team-name">${escapeHtml(r.teamName || '')}</div>
         </div>
-        <div class="lb-picks">${r.topHorse ? `<span class="lb-pick-chip captain">${escapeHtml(r.topHorse)} ⭐</span>` : '<span class="lb-pick-chip">No captain set</span>'}</div>
         <div class="lb-score-col"><div class="lb-pts">${fmtMoney(r.score)}</div><div class="lb-pts-label">${r.stableCount}/10 horses</div></div>
         <div class="lb-change eq">—</div>
       </div>`;

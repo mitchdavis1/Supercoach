@@ -125,7 +125,7 @@ function renderCurrentStable(canTransfer) {
       <div class="stable-player-row ${isOut ? 'selecting-out' : ''} ${locked ? 'locked' : ''}" onclick="${locked ? '' : `selectTransferOut('${s.horse_id}')`}">
         <div class="spr-avatar horse">${horse?.emoji || '🐎'}</div>
         <div class="spr-info">
-          <div class="spr-name">${escapeHtml(horse?.name || 'Horse')}${s.is_captain ? '<span class="captain-lock">C</span>' : ''}</div>
+          <div class="spr-name">${escapeHtml(horse?.name || 'Horse')}</div>
           <div class="spr-meta">${s.paid_price != null ? `$${s.paid_price} paid` : 'Free transfer'}</div>
         </div>
         ${isOut ? '<span class="out-badge">OUT</span>' : ''}

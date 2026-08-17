@@ -232,8 +232,6 @@ create table public.stables (
   league_id uuid not null references public.leagues(id) on delete cascade,
   user_id uuid not null references public.profiles(id),
   horse_id uuid not null references public.horses(id),
-  is_captain boolean not null default false,
-  is_vice_captain boolean not null default false,
   paid_price int, -- what was paid in the draft; null once transferred (transfers carry no $ value)
   baseline_prizemoney numeric not null default 0, -- horse's cumulative total at the moment it joined this stable; only prizemoney earned above this counts toward this manager's score
   acquired_at timestamptz not null default now(),
@@ -255,23 +253,11 @@ create policy "stables are viewable by league members"
     )
   );
 
-create policy "owners can set captain/vice-captain on their own horses"
-  on public.stables for update
-  to authenticated
-  using (user_id = auth.uid())
-  with check (user_id = auth.uid());
-
--- Horse-in/horse-out writes happen only inside execute_transfer()'s
--- SECURITY DEFINER transaction — that's what makes the unique(league_id,
--- horse_id) constraint actually enforce first-come-first-served.
-
--- As with league_members above: RLS can't restrict which columns an
--- UPDATE touches, so without this a client could directly rewrite
--- paid_price or baseline_prizemoney on their own rows and fabricate their
--- leaderboard score. Only is_captain/is_vice_captain — what the policy
--- above is actually for — stay directly writable.
-revoke update on public.stables from authenticated;
-grant update (is_captain, is_vice_captain) on public.stables to authenticated;
+-- No direct insert/update/delete policies: horse-in/horse-out writes happen
+-- only inside execute_transfer()'s SECURITY DEFINER transaction — that's
+-- what makes the unique(league_id, horse_id) constraint actually enforce
+-- first-come-first-served, and what keeps paid_price/baseline_prizemoney
+-- (both scored-competition state) out of direct client reach.
 
 -- ============================================================================
 -- TRANSFERS — weekly log, one per user per week

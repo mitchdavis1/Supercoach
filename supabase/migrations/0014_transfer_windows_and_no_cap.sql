@@ -76,8 +76,8 @@ begin
     delete from public.stables
     where league_id = p_league_id and user_id = auth.uid() and horse_id = p_horse_out_id;
 
-    insert into public.stables (league_id, user_id, horse_id, is_captain, is_vice_captain, paid_price)
-    values (p_league_id, auth.uid(), p_horse_in_id, v_out.is_captain, v_out.is_vice_captain, null);
+    insert into public.stables (league_id, user_id, horse_id, paid_price)
+    values (p_league_id, auth.uid(), p_horse_in_id, null);
 
     insert into public.transfers (league_id, user_id, week_number, horse_out_id, horse_in_id)
     values (p_league_id, auth.uid(), v_week.week_number, p_horse_out_id, p_horse_in_id)

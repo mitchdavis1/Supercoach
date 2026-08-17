@@ -24,7 +24,6 @@ alter table public.league_members add column banked_earnings numeric not null de
 -- execute_transfer()'s SECURITY DEFINER transaction, which runs as the
 -- function owner and isn't subject to these grants.
 revoke update on public.stables from authenticated;
-grant update (is_captain, is_vice_captain) on public.stables to authenticated;
 
 revoke update on public.league_members from authenticated;
 grant update (team_name) on public.league_members to authenticated;
@@ -214,8 +213,8 @@ begin
     set banked_earnings = banked_earnings + (v_horse_out_total - v_out.baseline_prizemoney)
     where league_id = p_league_id and user_id = auth.uid();
 
-    insert into public.stables (league_id, user_id, horse_id, is_captain, is_vice_captain, paid_price, baseline_prizemoney)
-    values (p_league_id, auth.uid(), p_horse_in_id, v_out.is_captain, v_out.is_vice_captain, null, v_horse_in_total);
+    insert into public.stables (league_id, user_id, horse_id, paid_price, baseline_prizemoney)
+    values (p_league_id, auth.uid(), p_horse_in_id, null, v_horse_in_total);
 
     insert into public.transfers (league_id, user_id, week_number, horse_out_id, horse_in_id)
     values (p_league_id, auth.uid(), v_week.week_number, p_horse_out_id, p_horse_in_id)

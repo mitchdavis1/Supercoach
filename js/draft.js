@@ -372,7 +372,7 @@ function draftCompleteBannerHTML() {
   return `
     <div class="draft-complete-banner">
       <div style="font-family:'Anton',Impact,sans-serif;font-size:22px;">🏁 Draft Complete!</div>
-      <div>Your stable is set — head to My Stable to set your Captain.</div>
+      <div>Your stable is set — head to My Stable to check it out.</div>
       <button class="draft-import-btn" onclick="showPage('myteam')">View My Stable</button>
     </div>`;
 }

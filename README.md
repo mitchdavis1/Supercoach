@@ -1,9 +1,9 @@
 # SuperStable — Spring Racing Carnival Fantasy Horse Racing
 
 A multi-user, Supabase-backed fantasy horse racing game. Managers join a
-league, win a stable of 10 horses in a live salary-cap auction draft, set a
-Captain (2× scoring), and trade horses week to week as real Spring Racing
-Carnival prizemoney rolls in.
+league, win a stable of 10 horses in a live salary-cap auction draft, and
+trade horses week to week as real Spring Racing Carnival prizemoney rolls
+in.
 
 This is a migration of a single-file localStorage prototype
 (`legacy/src-supercoach-v5.html`) into a real backend, per
@@ -36,9 +36,9 @@ js/
   auth.js                Sign up / sign in / sign out (Supabase Auth)
   league.js              Create/join/schedule leagues, realtime membership
   draft.js                Draft room: nominate/bid, realtime, server clock
-  stable.js                My Stable: captain/vice-captain
+  stable.js                My Stable: current roster + earnings
   transfers.js              Weekly transfer flow
-  scoring.js                 Leaderboard (100% prizemoney, captain 2×)
+  scoring.js                 Leaderboard (100% prizemoney earned since acquiring each horse)
   admin-import.js             Horse pool / acceptances / prizemoney import
   inplay.js                    "My Stable — Acceptances" view
   app.js                        Entry point: page router, wires everything
@@ -52,7 +52,8 @@ legacy/                  The original prototype + migration brief, for reference
 
 1. Create a project at [supabase.com](https://supabase.com).
 2. In the SQL Editor, run each file in `supabase/migrations/` **in order**
-   (0001 → 0015). They're plain SQL, so `supabase db push` via the CLI works
+   (0001 → 0016, skipping 0005 — removed along with the Captain/VC feature).
+   They're plain SQL, so `supabase db push` via the CLI works
    too if you prefer.
 3. In Authentication → Providers, email/password should already be enabled
    by default. Decide whether you want "Confirm email" on — if it's on,
@@ -139,14 +140,12 @@ It's a static site — no build step. Any of these work:
 
 - **Weekly scoring isn't implemented** — this matches the prototype
   exactly (`setLbRound()` was a no-op stub there too). The leaderboard is
-  always full-season: sum of each horse's cumulative `prizemoney.
-  total_prizemoney`, captain doubled. A real "Week N" breakdown would need
-  per-week prizemoney snapshots, which the source data (a single
-  season-to-date cumulative import) doesn't currently provide.
-- **No automatic Vice-Captain scoring fallback.** The Rules page text says
-  a scratched Captain's score falls back to the VC, but the prototype only
-  ever tracked VC as a badge — nothing computed the fallback. Carried over
-  as-is; flagged here as the same known gap the brief inherited.
+  always full-season: banked_earnings plus, for each horse currently held,
+  `prizemoney.total_prizemoney` minus that stable row's baseline (what the
+  horse had already earned when it joined — see `earnedForStableRow()` in
+  `state.js`). A real "Week N" breakdown would need per-week prizemoney
+  snapshots, which the source data (a single season-to-date cumulative
+  import) doesn't currently provide.
 - **Draft clock resolution relies on some client calling an RPC.** Every
   draft-room action self-heals an expired clock first, and any league
   member simply having the draft room open causes a tick every second via
