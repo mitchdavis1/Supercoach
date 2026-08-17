@@ -1,9 +1,11 @@
 -- Transfers — one horse swap per league member per week.
 --
--- The incoming horse inherits the outgoing horse's paid_price exactly (cap
--- spend never changes on a transfer), and captain/VC status carries over to
--- the incoming horse if the outgoing horse held it — both ported from
--- confirmTransfer() in the prototype.
+-- The salary cap only ever applied during the live auction draft — once
+-- that's over, dollar value has no bearing on who can trade for what, so
+-- the incoming horse's paid_price is always null (not carried over from the
+-- outgoing horse). Captain/VC status still carries over to the incoming
+-- horse if the outgoing horse held it — both ported from confirmTransfer()
+-- in the prototype, minus the now-removed cap carryover.
 --
 -- Atomicity/first-come-first-served comes from two unique constraints doing
 -- real work inside one transaction: stables(league_id, horse_id) means a
@@ -27,7 +29,11 @@ begin
 
   select * into v_week from public.get_current_week();
   if not found then
-    raise exception 'The season is over — no more transfers can be made';
+    if exists (select 1 from public.season_weeks where closes_at > now()) then
+      raise exception 'The transfer window is currently closed — check the Stable Transfer page for when it reopens';
+    else
+      raise exception 'The season is over — no more transfers can be made';
+    end if;
   end if;
 
   select * into v_out from public.stables
@@ -51,7 +57,7 @@ begin
     where league_id = p_league_id and user_id = auth.uid() and horse_id = p_horse_out_id;
 
     insert into public.stables (league_id, user_id, horse_id, is_captain, is_vice_captain, paid_price)
-    values (p_league_id, auth.uid(), p_horse_in_id, v_out.is_captain, v_out.is_vice_captain, v_out.paid_price);
+    values (p_league_id, auth.uid(), p_horse_in_id, v_out.is_captain, v_out.is_vice_captain, null);
 
     insert into public.transfers (league_id, user_id, week_number, horse_out_id, horse_in_id)
     values (p_league_id, auth.uid(), v_week.week_number, p_horse_out_id, p_horse_in_id)

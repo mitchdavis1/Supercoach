@@ -224,7 +224,7 @@ create table public.stables (
   horse_id uuid not null references public.horses(id),
   is_captain boolean not null default false,
   is_vice_captain boolean not null default false,
-  paid_price int not null,
+  paid_price int, -- what was paid in the draft; null once transferred (transfers carry no $ value)
   acquired_at timestamptz not null default now(),
   primary key (league_id, user_id, horse_id),
   unique (league_id, horse_id) -- a horse can only sit in one member's stable per league

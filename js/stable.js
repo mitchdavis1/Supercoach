@@ -80,7 +80,7 @@ export function renderMyStablePage() {
           <div class="slot-avatar horse">${horse?.emoji || '🐎'}</div>
           <div class="slot-info">
             <div class="slot-name">${escapeHtml(horse?.name || 'Horse')}${s.is_captain ? '<span class="captain-badge">Captain</span>' : ''}${s.is_vice_captain ? '<span class="vc-badge">VC</span>' : ''}</div>
-            <div class="slot-meta">$${s.paid_price} paid · ${fmtMoney(scored)} ${s.is_captain ? '(Captain ×2)' : 'earned'}</div>
+            <div class="slot-meta">${s.paid_price != null ? `$${s.paid_price} paid · ` : ''}${fmtMoney(scored)} ${s.is_captain ? '(Captain ×2)' : 'earned'}</div>
           </div>
           <button class="set-captain-btn" style="display:inline-block;" onclick="setCaptain('${s.horse_id}')" title="Set Captain">⭐</button>
           <button class="set-vc-btn" style="display:inline-block;" onclick="setViceCaptain('${s.horse_id}')" title="Set Vice Captain">🎖️</button>

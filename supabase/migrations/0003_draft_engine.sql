@@ -20,21 +20,26 @@
 create table public.season_weeks (
   week_number int primary key,
   label text not null,
-  deadline timestamptz not null
+  opens_at timestamptz not null,
+  closes_at timestamptz not null
 );
 
--- Spring Racing Carnival 2026 schedule, Friday 5pm AEDT deadlines,
--- carried over verbatim from the prototype's TRANSFER_WEEKS constant.
-insert into public.season_weeks (week_number, label, deadline) values
-  (1, 'Week 1 — Memsie–Makybe Diva', '2026-09-04T07:00:00Z'),
-  (2, 'Week 2', '2026-09-11T07:00:00Z'),
-  (3, 'Week 3', '2026-09-18T07:00:00Z'),
-  (4, 'Week 4', '2026-09-25T07:00:00Z'),
-  (5, 'Week 5', '2026-10-02T07:00:00Z'),
-  (6, 'Week 6', '2026-10-16T07:00:00Z'),
-  (7, 'Week 7', '2026-10-23T07:00:00Z'),
-  (8, 'Week 8', '2026-10-30T07:00:00Z'),
-  (9, 'Week 9', '2026-11-13T07:00:00Z');
+-- Spring Racing Carnival 2026 schedule — trading windows open Monday 10am
+-- and close Friday 7pm, Melbourne local time (correctly AEST/AEDT per date;
+-- daylight saving starts the first Sunday of October). Weeks 6 and 9 have a
+-- longer gap before them — bye weeks with no separate feature-race Friday
+-- of their own (Cox Plate/Cup carnival weeks), carried over from the
+-- original single-deadline schedule.
+insert into public.season_weeks (week_number, label, opens_at, closes_at) values
+  (1, 'Week 1 — Memsie–Makybe Diva', '2026-08-31T00:00:00Z', '2026-09-04T09:00:00Z'),
+  (2, 'Week 2', '2026-09-07T00:00:00Z', '2026-09-11T09:00:00Z'),
+  (3, 'Week 3', '2026-09-14T00:00:00Z', '2026-09-18T09:00:00Z'),
+  (4, 'Week 4', '2026-09-21T00:00:00Z', '2026-09-25T09:00:00Z'),
+  (5, 'Week 5', '2026-09-28T00:00:00Z', '2026-10-02T09:00:00Z'),
+  (6, 'Week 6', '2026-10-11T23:00:00Z', '2026-10-16T08:00:00Z'),
+  (7, 'Week 7', '2026-10-18T23:00:00Z', '2026-10-23T08:00:00Z'),
+  (8, 'Week 8', '2026-10-25T23:00:00Z', '2026-10-30T08:00:00Z'),
+  (9, 'Week 9', '2026-11-08T23:00:00Z', '2026-11-13T08:00:00Z');
 
 alter table public.season_weeks enable row level security;
 
@@ -48,7 +53,7 @@ returns public.season_weeks
 language sql
 stable
 as $$
-  select * from public.season_weeks where deadline > now() order by week_number asc limit 1;
+  select * from public.season_weeks where now() >= opens_at and now() < closes_at order by week_number asc limit 1;
 $$;
 
 grant execute on function public.get_current_week() to authenticated;

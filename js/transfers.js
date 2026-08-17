@@ -5,14 +5,15 @@ let transferOutId = null;
 let transferInId = null;
 let leagueOwnedHorseIds = new Set();
 let currentWeek = null;
+let nextWeek = null;
 let transferLog = [];
 
 export async function loadTransferContext() {
   const league = getActiveLeague();
   if (!league) return;
 
-  const [{ data: week }, { data: owned }, { data: log }] = await Promise.all([
-    supabase.rpc('get_current_week'),
+  const [{ data: weeks }, { data: owned }, { data: log }] = await Promise.all([
+    supabase.from('season_weeks').select('*').order('week_number'),
     supabase.from('stables').select('horse_id, user_id').eq('league_id', league.id),
     supabase
       .from('transfers')
@@ -22,7 +23,14 @@ export async function loadTransferContext() {
       .limit(30),
   ]);
 
-  currentWeek = week || null;
+  // A week is "current" only while its trading window is actually open
+  // (Monday 10am -> Friday 7pm) — there's a real closed period between
+  // windows now, not just whichever deadline happens to be soonest.
+  const nowMs = Date.now();
+  const allWeeks = weeks || [];
+  currentWeek = allWeeks.find((w) => new Date(w.opens_at).getTime() <= nowMs && nowMs < new Date(w.closes_at).getTime()) || null;
+  nextWeek = currentWeek ? null : allWeeks.find((w) => new Date(w.opens_at).getTime() > nowMs) || null;
+
   leagueOwnedHorseIds = new Set((owned || []).filter((s) => s.user_id !== state.session.user.id).map((s) => s.horse_id));
   transferLog = log || [];
 }
@@ -63,6 +71,10 @@ export async function confirmTransfer() {
   renderTransferPage();
 }
 
+function fmtMelb(iso) {
+  return new Date(iso).toLocaleString('en-AU', { timeZone: 'Australia/Melbourne', weekday: 'short', hour: 'numeric', minute: '2-digit', day: 'numeric', month: 'short' });
+}
+
 export function renderTransferPage() {
   const league = getActiveLeague();
   const weekPill = document.getElementById('currentWeekPill');
@@ -81,11 +93,17 @@ export function renderTransferPage() {
   const usedThisWeek = transferLog.some((t) => currentWeek && t.week_number === currentWeek.week_number && t.user_id === state.session.user.id);
   const canTransfer = stableComplete && !!currentWeek && !usedThisWeek;
 
-  if (weekPill) weekPill.textContent = currentWeek ? currentWeek.label : 'Season closed';
-  if (deadlineDisplay) deadlineDisplay.textContent = currentWeek ? new Date(currentWeek.deadline).toLocaleString('en-AU', { timeZone: 'Australia/Melbourne', weekday: 'short', hour: 'numeric', minute: '2-digit', day: 'numeric', month: 'short' }) : '—';
+  if (weekPill) weekPill.textContent = currentWeek ? currentWeek.label : nextWeek ? nextWeek.label : 'Season closed';
+  if (deadlineDisplay) {
+    deadlineDisplay.textContent = currentWeek
+      ? `Closes ${fmtMelb(currentWeek.closes_at)}`
+      : nextWeek
+      ? `Opens ${fmtMelb(nextWeek.opens_at)}`
+      : '—';
+  }
   if (statusDot) statusDot.classList.toggle('closed', !canTransfer);
   if (statusText) {
-    statusText.textContent = !currentWeek ? 'Season closed' : usedThisWeek ? 'Transfer used' : !stableComplete ? 'Stable incomplete' : 'Open';
+    statusText.textContent = !currentWeek ? (nextWeek ? 'Window closed' : 'Season closed') : usedThisWeek ? 'Transfer used' : !stableComplete ? 'Stable incomplete' : 'Open';
     statusText.classList.toggle('closed', !canTransfer);
   }
   if (allowanceDisplay) allowanceDisplay.textContent = canTransfer ? '1' : '0';
@@ -108,7 +126,7 @@ function renderCurrentStable(canTransfer) {
         <div class="spr-avatar horse">${horse?.emoji || '🐎'}</div>
         <div class="spr-info">
           <div class="spr-name">${escapeHtml(horse?.name || 'Horse')}${s.is_captain ? '<span class="captain-lock">C</span>' : ''}</div>
-          <div class="spr-meta">$${s.paid_price} paid</div>
+          <div class="spr-meta">${s.paid_price != null ? `$${s.paid_price} paid` : 'Free transfer'}</div>
         </div>
         ${isOut ? '<span class="out-badge">OUT</span>' : ''}
       </div>`;
@@ -154,10 +172,9 @@ function renderConfirmStrip() {
   strip.style.display = 'flex';
   const outHorse = state.horsesById.get(transferOutId);
   const inHorse = state.horsesById.get(transferInId);
-  const outStable = state.stable.find((s) => s.horse_id === transferOutId);
   document.getElementById('confirmChipOut').textContent = outHorse?.name || '';
   document.getElementById('confirmChipIn').textContent = inHorse?.name || '';
-  document.getElementById('confirmBudgetNote').textContent = `$${outStable?.paid_price || 0} paid carries over to ${inHorse?.name || ''}`;
+  document.getElementById('confirmBudgetNote').textContent = 'No $ value on transfers — the cap only applied during the draft';
 }
 
 function renderTransferLog() {
