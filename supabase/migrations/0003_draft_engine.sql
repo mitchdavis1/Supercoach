@@ -200,8 +200,11 @@ begin
     insert into public.league_draft_picks (league_id, user_id, horse_id, price_paid)
     values (p_league_id, v_state.current_bidder_user_id, v_state.current_lot_horse_id, v_state.current_bid);
 
-    insert into public.stables (league_id, user_id, horse_id, paid_price)
-    values (p_league_id, v_state.current_bidder_user_id, v_state.current_lot_horse_id, v_state.current_bid);
+    insert into public.stables (league_id, user_id, horse_id, paid_price, baseline_prizemoney)
+    values (
+      p_league_id, v_state.current_bidder_user_id, v_state.current_lot_horse_id, v_state.current_bid,
+      coalesce((select total_prizemoney from public.prizemoney where horse_id = v_state.current_lot_horse_id), 0)
+    );
 
     v_team_count := array_length(v_state.nominator_order, 1);
     v_next_idx := v_state.nominator_index;

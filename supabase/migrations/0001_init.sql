@@ -91,6 +91,7 @@ create table public.league_members (
   league_id uuid not null references public.leagues(id) on delete cascade,
   user_id uuid not null references public.profiles(id) on delete cascade,
   team_name text,
+  banked_earnings numeric not null default 0, -- earned while owning horses since traded away; permanent, survives roster changes
   joined_at timestamptz not null default now(),
   primary key (league_id, user_id)
 );
@@ -113,6 +114,15 @@ create policy "users can leave a league"
   using (user_id = auth.uid());
 
 -- Joining is via the join_league() RPC so the code lookup + insert is atomic.
+
+-- The update policy above is row-scoped only — Postgres RLS can't restrict
+-- which columns an UPDATE touches, and Supabase grants table-wide UPDATE to
+-- authenticated by default. banked_earnings is scored-competition state, so
+-- it must only ever move through execute_transfer()'s SECURITY DEFINER
+-- transaction (which runs as the function owner and isn't subject to these
+-- grants), never directly from the client.
+revoke update on public.league_members from authenticated;
+grant update (team_name) on public.league_members to authenticated;
 
 -- ============================================================================
 -- HORSES — global catalog (admin-managed)
@@ -225,6 +235,7 @@ create table public.stables (
   is_captain boolean not null default false,
   is_vice_captain boolean not null default false,
   paid_price int, -- what was paid in the draft; null once transferred (transfers carry no $ value)
+  baseline_prizemoney numeric not null default 0, -- horse's cumulative total at the moment it joined this stable; only prizemoney earned above this counts toward this manager's score
   acquired_at timestamptz not null default now(),
   primary key (league_id, user_id, horse_id),
   unique (league_id, horse_id) -- a horse can only sit in one member's stable per league
@@ -253,6 +264,14 @@ create policy "owners can set captain/vice-captain on their own horses"
 -- Horse-in/horse-out writes happen only inside execute_transfer()'s
 -- SECURITY DEFINER transaction — that's what makes the unique(league_id,
 -- horse_id) constraint actually enforce first-come-first-served.
+
+-- As with league_members above: RLS can't restrict which columns an
+-- UPDATE touches, so without this a client could directly rewrite
+-- paid_price or baseline_prizemoney on their own rows and fabricate their
+-- leaderboard score. Only is_captain/is_vice_captain — what the policy
+-- above is actually for — stay directly writable.
+revoke update on public.stables from authenticated;
+grant update (is_captain, is_vice_captain) on public.stables to authenticated;
 
 -- ============================================================================
 -- TRANSFERS — weekly log, one per user per week

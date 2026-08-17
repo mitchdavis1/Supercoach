@@ -40,7 +40,7 @@ export async function loadMyLeagues() {
 export async function loadLeagueMembers(leagueId) {
   const { data, error } = await supabase
     .from('league_members')
-    .select('user_id, team_name, joined_at, profiles(username, display_name)')
+    .select('user_id, team_name, banked_earnings, joined_at, profiles(username, display_name)')
     .eq('league_id', leagueId)
     .order('joined_at', { ascending: true });
 

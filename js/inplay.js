@@ -1,5 +1,5 @@
 import { supabase } from './supabaseClient.js';
-import { state, getActiveLeague, fmtMoney } from './state.js';
+import { state, getActiveLeague, fmtMoney, earnedForStableRow } from './state.js';
 
 export async function renderInPlay() {
   const container = document.getElementById('inplayContent');
@@ -27,13 +27,14 @@ export async function renderInPlay() {
     (acc ? racing : notRacing).push({ s, horse, acc });
   });
 
+  const bankedEarnings = Number(state.members.find((m) => m.user_id === state.session.user.id)?.banked_earnings) || 0;
   const totalScore = state.stable.reduce((sum, s) => {
-    const earned = state.prizemoneyByHorse.get(s.horse_id) || 0;
+    const earned = earnedForStableRow(s);
     return sum + (s.is_captain ? Math.round(earned * 2) : earned);
-  }, 0);
+  }, bankedEarnings);
 
   const card = ({ s, horse, acc }) => {
-    const earned = state.prizemoneyByHorse.get(s.horse_id) || 0;
+    const earned = earnedForStableRow(s);
     const scored = s.is_captain ? earned * 2 : earned;
     return `
       <div class="inplay-card ${acc ? 'racing' : 'na-card'} ${s.is_captain ? 'captain-card' : ''}">
@@ -48,7 +49,7 @@ export async function renderInPlay() {
         <div></div>
         <div class="inplay-score-col">
           <div class="inplay-earned ${scored ? '' : 'zero'}">${fmtMoney(scored)}</div>
-          <div class="inplay-earned-label">${s.is_captain ? 'captain ×2' : 'season total'}</div>
+          <div class="inplay-earned-label">${s.is_captain ? 'captain ×2' : 'earned by you'}</div>
         </div>
       </div>`;
   };

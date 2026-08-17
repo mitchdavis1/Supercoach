@@ -1,12 +1,16 @@
 import { supabase } from './supabaseClient.js';
-import { state, getActiveLeague, fmtMoney } from './state.js';
+import { state, getActiveLeague, fmtMoney, earnedForStableRow } from './state.js';
 
-// Scoring: a horse scores 100% of its cumulative prizemoney; the Captain's
-// contribution is doubled. Ported exactly from computeMyLeaderboardScore()
-// — summed across the whole stable, no per-week breakdown (the prototype
-// never actually implemented weekly scoring; the leaderboard's "Filter by
-// week" selector is preserved as a UI affordance but full-season is the
-// only figure that's real).
+// Scoring: a horse scores 100% of what it's earned since joining this
+// stable (see earnedForStableRow in state.js — not its raw cumulative
+// total, which would otherwise hand a traded-in horse's pre-trade earnings
+// to its new owner); the Captain's contribution is doubled. Plus
+// banked_earnings — money already locked in from horses traded away
+// earlier in the season, which stays with the manager permanently. Ported
+// from computeMyLeaderboardScore() — summed across the whole stable, no
+// per-week breakdown (the prototype never actually implemented weekly
+// scoring; the leaderboard's "Filter by week" selector is preserved as a
+// UI affordance but full-season is the only figure that's real).
 
 export async function loadPrizemoney() {
   const { data, error } = await supabase.from('prizemoney').select('horse_id, total_prizemoney');
@@ -17,11 +21,12 @@ export async function loadPrizemoney() {
   state.prizemoneyByHorse = new Map((data || []).map((p) => [p.horse_id, Number(p.total_prizemoney)]));
 }
 
-function scoreForStable(stableRows) {
-  return stableRows.reduce((total, s) => {
-    const earned = state.prizemoneyByHorse.get(s.horse_id) || 0;
+function scoreForStable(stableRows, bankedEarnings) {
+  const fromHorses = stableRows.reduce((total, s) => {
+    const earned = earnedForStableRow(s);
     return total + (s.is_captain ? Math.round(earned * 2) : earned);
   }, 0);
+  return fromHorses + (Number(bankedEarnings) || 0);
 }
 
 export async function renderLeaderboard() {
@@ -56,7 +61,7 @@ export async function renderLeaderboard() {
       userId: m.user_id,
       name: m.profiles?.display_name || m.profiles?.username || 'Manager',
       teamName: m.team_name,
-      score: scoreForStable(stable),
+      score: scoreForStable(stable, m.banked_earnings),
       topHorse: captainHorse ? state.horsesById.get(captainHorse.horse_id)?.name : null,
       stableCount: stable.length,
     };

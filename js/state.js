@@ -23,6 +23,17 @@ export function horseName(id) {
   return h ? h.name : 'Unknown horse';
 }
 
+// A horse only scores what it's earned since joining this stable — not its
+// raw cumulative total, which would otherwise hand a traded-in horse's
+// pre-trade earnings to its new owner. baseline_prizemoney is snapshotted
+// server-side at draft/transfer time (see execute_transfer()); earnings
+// banked from horses traded away live on league_members.banked_earnings,
+// separately from any single horse.
+export function earnedForStableRow(s) {
+  const raw = state.prizemoneyByHorse.get(s.horse_id) || 0;
+  return raw - (Number(s.baseline_prizemoney) || 0);
+}
+
 export function fmtMoney(n) {
   const v = Number(n) || 0;
   if (Math.abs(v) >= 1_000_000) return '$' + (v / 1_000_000).toFixed(2).replace(/\.00$/, '') + 'M';

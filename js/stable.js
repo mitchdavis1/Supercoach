@@ -1,5 +1,5 @@
 import { supabase } from './supabaseClient.js';
-import { state, getActiveLeague } from './state.js';
+import { state, getActiveLeague, earnedForStableRow } from './state.js';
 
 export async function loadStable(leagueId) {
   if (!leagueId || !state.session) {
@@ -72,7 +72,7 @@ export function renderMyStablePage() {
     .sort((a, b) => (b.is_captain - a.is_captain) || (b.is_vice_captain - a.is_vice_captain))
     .map((s) => {
       const horse = state.horsesById.get(s.horse_id);
-      const earned = state.prizemoneyByHorse.get(s.horse_id) || 0;
+      const earned = earnedForStableRow(s);
       const scored = s.is_captain ? earned * 2 : earned;
       return `
         <div class="team-slot filled ${s.is_captain ? 'captain' : ''} ${s.is_vice_captain ? 'vc' : ''}">
