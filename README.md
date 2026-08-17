@@ -52,7 +52,7 @@ legacy/                  The original prototype + migration brief, for reference
 
 1. Create a project at [supabase.com](https://supabase.com).
 2. In the SQL Editor, run each file in `supabase/migrations/` **in order**
-   (0001 → 0012). They're plain SQL, so `supabase db push` via the CLI works
+   (0001 → 0013). They're plain SQL, so `supabase db push` via the CLI works
    too if you prefer.
 3. In Authentication → Providers, email/password should already be enabled
    by default. Decide whether you want "Confirm email" on — if it's on,
@@ -99,11 +99,14 @@ tries to start a draft — `start_draft()` will reject an empty pool.
 
 With a large pool (thousands of horses), also use the **Draft Pool
 Curation** card to **star** the horses you actually want appearing in the
-draft room — search the full pool and click ☆ to star each one (a few
-dozen up to ~100 is typical). Starred horses are what the nomination panel
-shows by default (managers can still search the full pool for anything
-else) and what auto-nomination draws from when a manager's clock expires;
-if nothing is starred it falls back to the whole active pool so the draft
+draft room — either upload a file of names (matched against horses
+already in the pool, purely additive — it never creates new horses and
+never un-stars anything, so it's safe to re-run with an updated list), or
+search the full pool and click ☆ to star individually. A few dozen up to
+~100 is typical. Starred horses are what the nomination panel shows by
+default (managers can still search the full pool for anything else) and
+what auto-nomination draws from when a manager's clock expires; if
+nothing is starred it falls back to the whole active pool so the draft
 never deadlocks.
 
 The same page has a **Reset League Draft** tool (admin-only) for testing —

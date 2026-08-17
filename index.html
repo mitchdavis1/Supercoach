@@ -382,9 +382,17 @@
 
       <div class="admin-card">
         <div class="admin-card-header">⭐ Draft Pool Curation</div>
-        <div class="admin-card-sub">Star the horses you want appearing by default in the draft room's nomination list — without this, managers would be nominating from the whole ~9,000-horse pool. Search below and click ☆ to star a horse (aim for a few dozen to ~100). Starred horses are also what auto-nomination draws from if a manager's clock runs out.</div>
-        <div class="admin-star-count"><strong id="adminStarredCount">0</strong> horses currently starred</div>
-        <input type="text" id="horseCurationSearch" class="admin-horse-search" placeholder="Search all horses to star…" oninput="filterHorseCurationList()" />
+        <div class="admin-card-sub">Star the horses you want appearing by default in the draft room's nomination list — without this, managers would be nominating from the whole ~9,000-horse pool. Starred horses are also what auto-nomination draws from if a manager's clock runs out.</div>
+
+        <div class="admin-card-sub" style="margin-bottom:6px;"><strong>Bulk star from a file</strong> — upload a list of names (a column containing "horse" in its header) and each one is matched by name against horses already in your pool and starred. It never creates new horses and never un-stars anything already starred, so it's always safe to re-run with an updated list.</div>
+        <div class="admin-file-row">
+          <input type="file" id="starredHorsesFileInput" class="admin-file-input" accept=".xlsx,.xls,.csv" />
+          <button class="admin-import-btn" onclick="handleStarredHorsesFile()">Star From File</button>
+        </div>
+        <div id="starredImportResult"></div>
+
+        <div class="admin-star-count" style="margin-top:16px;"><strong id="adminStarredCount">0</strong> horses currently starred</div>
+        <input type="text" id="horseCurationSearch" class="admin-horse-search" placeholder="Or search all horses to star individually…" oninput="filterHorseCurationList()" />
         <div class="admin-horse-list" id="horseCurationList"></div>
       </div>
 

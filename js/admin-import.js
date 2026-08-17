@@ -144,6 +144,42 @@ export async function handleResultsFile() {
   }
 }
 
+export async function handleStarredHorsesFile() {
+  const input = document.getElementById('starredHorsesFileInput');
+  const file = input?.files?.[0];
+  if (!file) return;
+
+  try {
+    const rows = await readWorkbookFile(file);
+    const headerIdx = findHeaderRow(rows);
+    if (headerIdx === -1) throw 'Could not find a header row containing a "horse" column.';
+    const header = rows[headerIdx];
+    const horseCol = colIndex(header, /horse/i);
+
+    const dataRows = rows.slice(headerIdx + 1).filter((r) => r && r[horseCol] !== '' && r[horseCol] != null);
+    const payload = dataRows.map((r) => ({ name: String(r[horseCol]).trim() }));
+
+    const { data, error } = await supabase.rpc('import_starred_horses', { p_rows: payload });
+    if (error) throw error.message;
+
+    const unmatchedHtml = data.unmatched.length
+      ? `<div class="admin-new-list">${data.unmatched.length} name(s) didn't match a horse already in your pool (check for typos): ${data.unmatched.map(escapeHtml).join(', ')}</div>`
+      : '';
+    renderResult(
+      'starredImportResult',
+      `<span class="admin-result-stat">${data.newly_starred} newly starred</span><span class="admin-result-stat">${data.already_starred} already starred</span><span class="admin-result-stat">${data.unmatched.length} unmatched</span> out of ${data.total} names.${unmatchedHtml}`,
+      false
+    );
+
+    const { loadHorses } = await import('./draft.js');
+    await loadHorses();
+    renderStarredCount();
+    renderHorseCurationList();
+  } catch (err) {
+    renderResult('starredImportResult', String(err), true);
+  }
+}
+
 export async function resetImportedData() {
   if (!confirm('Clear every horse, acceptance, and prizemoney total added via import? This cannot be undone.')) return;
   const { error } = await supabase.rpc('reset_imported_data');
