@@ -189,6 +189,59 @@ export async function renderAdminStats() {
   horsesEl.textContent = horseCount ?? 0;
   racingEl.textContent = raceCount ?? 0;
   earningEl.textContent = earnCount ?? 0;
+
+  renderStarredCount();
+  renderHorseCurationList();
+}
+
+function renderStarredCount() {
+  const el = document.getElementById('adminStarredCount');
+  if (!el) return;
+  el.textContent = state.horses.filter((h) => h.is_starred).length;
+}
+
+export function filterHorseCurationList() {
+  renderHorseCurationList();
+}
+
+function renderHorseCurationList() {
+  const list = document.getElementById('horseCurationList');
+  if (!list) return;
+  const search = (document.getElementById('horseCurationSearch')?.value || '').toLowerCase();
+  const pool = search
+    ? state.horses.filter((h) => h.name.toLowerCase().includes(search)).slice(0, 300)
+    : state.horses.filter((h) => h.is_starred);
+
+  list.innerHTML = pool.map((h) => `
+    <div class="admin-horse-row">
+      <span class="admin-horse-name">${escapeHtml(h.name)}</span>
+      <span class="admin-horse-trainer">${escapeHtml(h.trainer || '')}</span>
+      <button class="admin-star-btn ${h.is_starred ? 'starred' : ''}" onclick="toggleHorseStar('${h.id}')">${h.is_starred ? '★' : '☆'}</button>
+    </div>`).join('') || (search
+      ? '<div class="draft-waiting">No horses match your search</div>'
+      : '<div class="draft-waiting">No starred horses yet — search above and star a few dozen to build the draft room\'s default list.</div>');
+}
+
+export async function toggleHorseStar(horseId) {
+  const horse = state.horses.find((h) => h.id === horseId);
+  if (!horse) return;
+  const next = !horse.is_starred;
+
+  const { error } = await supabase.from('horses').update({ is_starred: next }).eq('id', horseId);
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  horse.is_starred = next;
+  renderStarredCount();
+  renderHorseCurationList();
+}
+
+function escapeHtml(s) {
+  const div = document.createElement('div');
+  div.textContent = s ?? '';
+  return div.innerHTML;
 }
 
 function fmtImportDate(v) {

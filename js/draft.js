@@ -15,12 +15,21 @@ export function onDraftUpdate(callback) {
 }
 
 export async function loadHorses() {
-  const { data, error } = await supabase.from('horses').select('*').order('name');
-  if (error) {
-    console.error('Could not load horses', error);
-    return;
+  // Supabase caps a single request at its configured max rows (1000 by
+  // default) — with ~9,000 horses that silently truncated the pool to
+  // roughly the first two letters of the alphabet. Page through it all.
+  const pageSize = 1000;
+  const all = [];
+  for (let from = 0; ; from += pageSize) {
+    const { data, error } = await supabase.from('horses').select('*').order('name').range(from, from + pageSize - 1);
+    if (error) {
+      console.error('Could not load horses', error);
+      break;
+    }
+    all.push(...data);
+    if (data.length < pageSize) break;
   }
-  state.horses = data || [];
+  state.horses = all;
   state.horsesById = new Map(state.horses.map((h) => [h.id, h]));
 }
 
@@ -297,19 +306,25 @@ function renderNominationList() {
   const pool = availableHorses();
 
   if (!search) {
-    list.innerHTML = `<div class="draft-waiting">Type to search ${pool.length.toLocaleString()} available horses…</div>`;
+    const starred = pool.filter((h) => h.is_starred);
+    list.innerHTML = starred.map(nominationRowHTML).join('') ||
+      `<div class="draft-waiting">No horses are starred yet — search above, or ask your admin to star some in Data Import so they show up here by default.</div>`;
     return;
   }
 
   const horses = pool.filter((h) => h.name.toLowerCase().includes(search)).slice(0, 200);
-  list.innerHTML = horses.map((h) => `
+  list.innerHTML = horses.map(nominationRowHTML).join('') || '<div class="draft-waiting">No horses match your search</div>';
+}
+
+function nominationRowHTML(h) {
+  return `
     <div class="draft-nom-row" onclick="nominateHorse('${h.id}')">
       <div class="spr-avatar horse">${h.emoji || '🐎'}</div>
       <div class="spr-info">
         <div class="spr-name">${escapeHtml(h.name)}</div>
         <div class="spr-meta">${escapeHtml(h.trainer || '')}</div>
       </div>
-    </div>`).join('') || '<div class="draft-waiting">No horses match your search</div>';
+    </div>`;
 }
 
 function draftBoardHTML(league) {

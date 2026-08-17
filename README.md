@@ -52,7 +52,7 @@ legacy/                  The original prototype + migration brief, for reference
 
 1. Create a project at [supabase.com](https://supabase.com).
 2. In the SQL Editor, run each file in `supabase/migrations/` **in order**
-   (0001 → 0011). They're plain SQL, so `supabase db push` via the CLI works
+   (0001 → 0012). They're plain SQL, so `supabase db push` via the CLI works
    too if you prefer.
 3. In Authentication → Providers, email/password should already be enabled
    by default. Decide whether you want "Confirm email" on — if it's on,
@@ -95,10 +95,16 @@ update public.profiles set is_admin = true where username = 'your-username';
 
 Then use the Data Import tab to upload a horse pool spreadsheet (a column
 containing "horse" in its header is all that's required) before anyone
-tries to start a draft — `start_draft()` will reject an empty pool. The
-nomination search box only renders results once you start typing (it's
-searching the whole pool, not just what's visible) — with a large pool
-this avoids the list looking like it's stuck on whatever sorts first.
+tries to start a draft — `start_draft()` will reject an empty pool.
+
+With a large pool (thousands of horses), also use the **Draft Pool
+Curation** card to **star** the horses you actually want appearing in the
+draft room — search the full pool and click ☆ to star each one (a few
+dozen up to ~100 is typical). Starred horses are what the nomination panel
+shows by default (managers can still search the full pool for anything
+else) and what auto-nomination draws from when a manager's clock expires;
+if nothing is starred it falls back to the whole active pool so the draft
+never deadlocks.
 
 The same page has a **Reset League Draft** tool (admin-only) for testing —
 enter a league's join code to wipe its drafted horses, stables, and

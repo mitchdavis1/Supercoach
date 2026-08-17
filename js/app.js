@@ -6,7 +6,7 @@ import { loadStable, setCaptain, setViceCaptain, renderMyStablePage } from './st
 import { selectTransferOut, selectTransferIn, filterReplacements, confirmTransfer, loadTransferContext, renderTransferPage } from './transfers.js';
 import { loadPrizemoney, renderLeaderboard, setLbRound } from './scoring.js';
 import { renderInPlay } from './inplay.js';
-import { handleHorsePoolFile, handleAcceptancesFile, handleResultsFile, resetImportedData, resetLeagueDraft, renderAdminStats } from './admin-import.js';
+import { handleHorsePoolFile, handleAcceptancesFile, handleResultsFile, resetImportedData, resetLeagueDraft, renderAdminStats, filterHorseCurationList, toggleHorseStar } from './admin-import.js';
 
 const PAGES = ['myteam', 'draft', 'transfer', 'leaderboard', 'rules', 'joinleague', 'inplay', 'dataimport'];
 let activePage = 'draft';
@@ -38,6 +38,8 @@ window.handleAcceptancesFile = handleAcceptancesFile;
 window.handleResultsFile = handleResultsFile;
 window.resetImportedData = resetImportedData;
 window.resetLeagueDraft = resetLeagueDraft;
+window.filterHorseCurationList = filterHorseCurationList;
+window.toggleHorseStar = toggleHorseStar;
 
 function showPage(page) {
   activePage = page;

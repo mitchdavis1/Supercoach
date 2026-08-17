@@ -748,6 +748,16 @@ body { background: #FFF5FA; color: #1A1F5E; min-height: 100vh; font-family: 'Int
 .admin-stat-val { font-family: 'Anton', Impact, sans-serif; font-size: 22px; color: #E8007D; }
 .admin-stat-label { font-size: 9px; color: #7080b0; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
 .admin-reset-link { font-size: 11px; color: #cc3344; cursor: pointer; text-decoration: underline; }
+.admin-horse-search { background: #FFF5FA; border: 2px solid #FFD6EC; border-radius: 8px; padding: 9px 12px; width: 100%; color: #1A1F5E; font-size: 12px; outline: none; margin-bottom: 10px; font-family: inherit; }
+.admin-horse-search:focus { border-color: #E8007D; }
+.admin-horse-list { display: flex; flex-direction: column; gap: 6px; max-height: 420px; overflow-y: auto; }
+.admin-horse-row { background: #FFF5FA; border: 1.5px solid #FFD6EC; border-radius: 8px; padding: 8px 12px; display: flex; align-items: center; gap: 10px; }
+.admin-horse-name { flex: 1; font-size: 12px; font-weight: 700; color: #1A1F5E; }
+.admin-horse-trainer { font-size: 11px; color: #7080b0; }
+.admin-star-btn { background: none; border: none; font-size: 18px; cursor: pointer; line-height: 1; color: #d0a0c0; padding: 2px 4px; }
+.admin-star-btn.starred { color: #E8A100; }
+.admin-star-count { font-size: 11px; color: #7080b0; margin-bottom: 10px; }
+.admin-star-count strong { color: #E8007D; }
 
 /* ── AUTH / LEAGUE GATE ── */
 .auth-error { background: #fff0f0; border: 1.5px solid #cc3344; color: #a02030; border-radius: 8px; padding: 10px 14px; font-size: 12px; margin-bottom: 14px; text-align: left; display: none; }

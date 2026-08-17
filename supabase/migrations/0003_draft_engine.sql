@@ -145,15 +145,31 @@ begin
   end if;
 
   if v_state.status = 'nominating' and v_state.nomination_deadline is not null and v_state.nomination_deadline <= now() then
+    -- Prefer the admin-curated starred pool for auto-nomination (it's the
+    -- same set shown by default in the nomination UI); fall back to the
+    -- full active pool if no starred horses are left undrafted.
     select h.id into v_random_horse
     from public.horses h
     where h.status = 'active'
+      and h.is_starred
       and not exists (
         select 1 from public.league_draft_picks p
         where p.league_id = p_league_id and p.horse_id = h.id
       )
     order by random()
     limit 1;
+
+    if v_random_horse is null then
+      select h.id into v_random_horse
+      from public.horses h
+      where h.status = 'active'
+        and not exists (
+          select 1 from public.league_draft_picks p
+          where p.league_id = p_league_id and p.horse_id = h.id
+        )
+      order by random()
+      limit 1;
+    end if;
 
     if v_random_horse is null then
       update public.league_draft_state set status = 'complete', updated_at = now()

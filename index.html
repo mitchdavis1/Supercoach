@@ -381,6 +381,14 @@
       </div>
 
       <div class="admin-card">
+        <div class="admin-card-header">⭐ Draft Pool Curation</div>
+        <div class="admin-card-sub">Star the horses you want appearing by default in the draft room's nomination list — without this, managers would be nominating from the whole ~9,000-horse pool. Search below and click ☆ to star a horse (aim for a few dozen to ~100). Starred horses are also what auto-nomination draws from if a manager's clock runs out.</div>
+        <div class="admin-star-count"><strong id="adminStarredCount">0</strong> horses currently starred</div>
+        <input type="text" id="horseCurationSearch" class="admin-horse-search" placeholder="Search all horses to star…" oninput="filterHorseCurationList()" />
+        <div class="admin-horse-list" id="horseCurationList"></div>
+      </div>
+
+      <div class="admin-card">
         <div class="admin-card-header">⚠️ Reset Imported Data</div>
         <div class="admin-card-sub">Clears every horse, this-week race, and earnings total added via import — useful for testing.</div>
         <span class="admin-reset-link" onclick="resetImportedData()">↺ Clear all imported data</span>

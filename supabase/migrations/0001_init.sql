@@ -127,12 +127,14 @@ create table public.horses (
   tags text[] not null default '{}',
   notes text,
   status text not null default 'active' check (status in ('active', 'retired', 'scratched')),
+  is_starred boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 
 create index horses_name_idx on public.horses using gin (to_tsvector('english', name));
 create index horses_status_idx on public.horses (status);
+create index horses_starred_idx on public.horses (is_starred) where is_starred;
 
 alter table public.horses enable row level security;
 
