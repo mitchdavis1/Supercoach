@@ -32,7 +32,7 @@ begin
   perform public.require_admin();
 
   return query
-  select p.id, p.username, p.display_name, u.email, p.is_admin, p.created_at, u.email_confirmed_at, u.last_sign_in_at
+  select p.id, p.username, p.display_name, u.email::text, p.is_admin, p.created_at, u.email_confirmed_at, u.last_sign_in_at
   from public.profiles p
   join auth.users u on u.id = p.id
   order by p.created_at desc;
