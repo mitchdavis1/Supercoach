@@ -5,8 +5,20 @@ let onAuthChange = () => {};
 
 export function initAuth(callback) {
   onAuthChange = callback;
-  supabase.auth.onAuthStateChange(async (_event, session) => {
+  supabase.auth.onAuthStateChange(async (event, session) => {
     state.session = session;
+
+    // Landing here via a password-reset email link: supabase-js already
+    // established a session from the recovery token in the URL, but that
+    // alone doesn't change the password — show a "set new password" form
+    // instead of dropping straight into the app. handleSetNewPassword()
+    // calling updateUser() fires USER_UPDATED through this same listener,
+    // which falls through to the normal signed-in flow below.
+    if (event === 'PASSWORD_RECOVERY') {
+      showRecoveryForm();
+      return;
+    }
+
     if (session) {
       await loadProfile();
     } else {
@@ -14,6 +26,15 @@ export function initAuth(callback) {
     }
     onAuthChange(session);
   });
+}
+
+function showRecoveryForm() {
+  document.getElementById('authGate').style.display = 'flex';
+  document.getElementById('appShell').style.display = 'none';
+  document.querySelector('.join-tabs').style.display = 'none';
+  document.getElementById('aform-signin').style.display = 'none';
+  document.getElementById('aform-join').style.display = 'none';
+  document.getElementById('aform-recovery').style.display = 'block';
 }
 
 async function loadProfile() {
@@ -103,4 +124,45 @@ export function switchAuthTab(tab) {
   document.getElementById('atab-join').classList.toggle('active', tab === 'join');
   document.getElementById('aform-signin').style.display = tab === 'signin' ? 'block' : 'none';
   document.getElementById('aform-join').style.display = tab === 'join' ? 'block' : 'none';
+  document.getElementById('aform-recovery').style.display = 'none';
+  document.querySelector('.join-tabs').style.display = 'flex';
+}
+
+export async function handleForgotPassword() {
+  clearAuthError();
+  const username = document.getElementById('authSigninUsername').value.trim();
+  if (!username) {
+    showAuthError('Enter your username above, then click "Forgot password?" again.');
+    return;
+  }
+
+  const { data: email, error: lookupError } = await supabase.rpc('email_for_username', { p_username: username });
+  if (lookupError || !email) {
+    showAuthError("We couldn't find that account.");
+    return;
+  }
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + window.location.pathname,
+  });
+  if (error) {
+    showAuthError(error.message);
+    return;
+  }
+  alert('Password reset email sent — check your inbox.');
+}
+
+export async function handleSetNewPassword() {
+  clearAuthError();
+  const password = document.getElementById('recoveryNewPassword').value;
+  if (!password || password.length < 6) {
+    showAuthError('Password must be at least 6 characters.');
+    return;
+  }
+
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) {
+    showAuthError(error.message);
+    return;
+  }
 }

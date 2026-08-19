@@ -1,12 +1,12 @@
 import { state } from './state.js';
-import { initAuth, handleSignIn, handleJoin, logout, switchAuthTab } from './auth.js';
+import { initAuth, handleSignIn, handleJoin, logout, switchAuthTab, handleForgotPassword, handleSetNewPassword } from './auth.js';
 import { loadMyLeagues, onLeagueUpdate, createLeague, joinLeagueByCode, scheduleDraft, leaveLeague, setActiveLeague, renderLeaguePage } from './league.js';
 import { loadHorses, loadDraftState, loadDraftPicks, subscribeToDraft, onDraftUpdate, startDraft, nominateHorse, placeYourBid, placeCustomBid, filterNominationList, renderDraftPage } from './draft.js';
 import { loadStable, renderMyStablePage } from './stable.js';
 import { selectTransferOut, selectTransferIn, filterReplacements, confirmTransfer, loadTransferContext, renderTransferPage } from './transfers.js';
 import { loadPrizemoney, renderLeaderboard, setLbRound } from './scoring.js';
 import { renderInPlay } from './inplay.js';
-import { handleHorsePoolFile, handleAcceptancesFile, handleResultsFile, handleStarredHorsesFile, resetImportedData, resetLeagueDraft, renderAdminStats, filterHorseCurationList, toggleHorseStar } from './admin-import.js';
+import { handleHorsePoolFile, handleAcceptancesFile, handleResultsFile, handleStarredHorsesFile, resetImportedData, resetLeagueDraft, renderAdminStats, filterHorseCurationList, toggleHorseStar, forceConfirmEmail, sendPasswordReset } from './admin-import.js';
 
 const PAGES = ['myteam', 'draft', 'transfer', 'leaderboard', 'rules', 'joinleague', 'inplay', 'dataimport'];
 let activePage = 'draft';
@@ -14,6 +14,8 @@ let activePage = 'draft';
 window.switchAuthTab = switchAuthTab;
 window.handleSignIn = handleSignIn;
 window.handleJoin = handleJoin;
+window.handleForgotPassword = handleForgotPassword;
+window.handleSetNewPassword = handleSetNewPassword;
 window.logout = logout;
 window.showPage = showPage;
 window.createLeague = createLeague;
@@ -38,6 +40,8 @@ window.handleStarredHorsesFile = handleStarredHorsesFile;
 window.resetImportedData = resetImportedData;
 window.resetLeagueDraft = resetLeagueDraft;
 window.filterHorseCurationList = filterHorseCurationList;
+window.forceConfirmEmail = forceConfirmEmail;
+window.sendPasswordReset = sendPasswordReset;
 window.toggleHorseStar = toggleHorseStar;
 
 function showPage(page) {

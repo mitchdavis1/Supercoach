@@ -32,6 +32,9 @@
       <div class="join-signup-prompt">
         New here? <a onclick="switchAuthTab('join')">Create an account →</a>
       </div>
+      <div class="join-signup-prompt">
+        <a onclick="handleForgotPassword()">Forgot password?</a>
+      </div>
     </div>
 
     <div id="aform-join" style="display:none">
@@ -45,6 +48,12 @@
       <div class="join-signup-prompt">
         Already have an account? <a onclick="switchAuthTab('signin')">Sign in →</a>
       </div>
+    </div>
+
+    <div id="aform-recovery" style="display:none">
+      <label class="join-label">Set a New Password</label>
+      <input class="join-input" type="password" id="recoveryNewPassword" placeholder="New password" />
+      <button class="join-btn" onclick="handleSetNewPassword()">Set New Password</button>
     </div>
   </div>
 </div>
@@ -338,6 +347,12 @@
         <div class="admin-stat-box"><div class="admin-stat-val" id="adminStatHorses">0</div><div class="admin-stat-label">Horses in pool</div></div>
         <div class="admin-stat-box"><div class="admin-stat-val" id="adminStatRacing">0</div><div class="admin-stat-label">Set for this week</div></div>
         <div class="admin-stat-box"><div class="admin-stat-val" id="adminStatEarning">0</div><div class="admin-stat-label">Horses with earnings</div></div>
+      </div>
+
+      <div class="admin-card">
+        <div class="admin-card-header">👤 User Accounts</div>
+        <div class="admin-card-sub">Everyone who's signed up, across every league. If someone gets "account already exists" on sign-up but "wrong password" on sign-in, it almost always means they never confirmed their email — <strong>Force Confirm</strong> unblocks them immediately with their existing password, no reset needed. <strong>Send Reset</strong> is for a genuinely forgotten password.</div>
+        <div class="admin-horse-list" id="accountsList"></div>
       </div>
 
       <div class="admin-card">

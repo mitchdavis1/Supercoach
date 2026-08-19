@@ -228,6 +228,49 @@ export async function renderAdminStats() {
 
   renderStarredCount();
   renderHorseCurationList();
+  await renderAccountsList();
+}
+
+async function renderAccountsList() {
+  const list = document.getElementById('accountsList');
+  if (!list) return;
+
+  const { data, error } = await supabase.rpc('admin_list_accounts');
+  if (error) {
+    list.innerHTML = `<div class="draft-waiting">${escapeHtml(error.message)}</div>`;
+    return;
+  }
+
+  list.innerHTML = (data || []).map((u) => `
+    <div class="admin-horse-row">
+      <span class="admin-horse-name">${escapeHtml(u.username)}${u.is_admin ? ' <span style="color:#E8007D;">(admin)</span>' : ''}</span>
+      <span class="admin-horse-trainer">${escapeHtml(u.email)}</span>
+      <span style="font-size:9px;font-weight:800;text-transform:uppercase;color:${u.email_confirmed_at ? '#2a9a50' : '#cc3344'};white-space:nowrap;">${u.email_confirmed_at ? 'Confirmed' : 'Unconfirmed'}</span>
+      ${!u.email_confirmed_at ? `<button class="admin-star-btn" style="font-size:10px;" onclick="forceConfirmEmail('${u.id}')" title="Force confirm email — unblocks sign-in with their existing password">✅ Confirm</button>` : ''}
+      <button class="admin-star-btn" style="font-size:10px;" onclick="sendPasswordReset('${escapeHtml(u.email)}')" title="Send password reset email">✉️ Reset</button>
+    </div>`).join('') || '<div class="draft-waiting">No accounts yet</div>';
+}
+
+export async function forceConfirmEmail(userId) {
+  if (!confirm("Force-confirm this account's email? They'll be able to sign in immediately with their existing password.")) return;
+  const { error } = await supabase.rpc('admin_confirm_email', { p_user_id: userId });
+  if (error) {
+    alert(error.message);
+    return;
+  }
+  await renderAccountsList();
+}
+
+export async function sendPasswordReset(email) {
+  if (!confirm(`Send a password reset email to ${email}?`)) return;
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + window.location.pathname,
+  });
+  if (error) {
+    alert(error.message);
+    return;
+  }
+  alert('Password reset email sent.');
 }
 
 function renderStarredCount() {
