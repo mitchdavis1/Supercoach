@@ -2,7 +2,7 @@ import { supabase } from './supabaseClient.js';
 import { state, getActiveLeague, fmtMoney } from './state.js';
 
 const SLOTS_TOTAL = 10;
-const NOM_SECONDS = 30;
+const NOM_SECONDS = 20;
 const BID_SECONDS = 20;
 
 let draftChannel = null;

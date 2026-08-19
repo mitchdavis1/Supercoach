@@ -1,71 +1,10 @@
--- Server-authoritative auction draft engine.
---
--- Economics carried over exactly from the prototype (src-supercoach-v5.html):
---   - $100 salary cap, 10 horses per stable, no bench
---   - every horse opens the auction at a $1 bid, placed automatically in the
---     nominator's name the instant they nominate
---   - bid clock opens at 20s. A bid only bumps the clock — up to a 10s
---     floor — if it's already below 10s remaining; above that, a bid
---     doesn't touch the clock at all, it just keeps counting down
---   - nomination clock is 20s; on expiry the on-the-clock manager
---     auto-nominates a random available horse (not a skip/pass) —
---     preferring the starred pool, falling back to the full active pool
---   - minimum raise is $1, but a manager may jump straight to any higher
---     amount as long as it's within their max bid
---   - maxBid = budget - reserve, where reserve = $1 for every OTHER empty
---     slot (10 total, minus horses already won, minus the slot being bid on)
---
--- Every mutating action funnels through advance_draft_if_expired() first so
--- an expired clock is always resolved server-side before any new action is
--- allowed to proceed — this is what makes the clock authoritative even
--- though there's no separate scheduled job ticking it.
+-- Nomination clock 30s -> 20s (start_draft, and advance_draft_if_expired's
+-- next-nominator branch). Bid clock changes from a hard reset-to-20s on
+-- every bid to a soft floor: a bid only touches bid_deadline if under 10s
+-- remain, bumping it up to exactly 10s — with 10s or more left, a bid
+-- doesn't extend the clock at all, it just keeps counting down.
 
-create table public.season_weeks (
-  week_number int primary key,
-  label text not null,
-  opens_at timestamptz not null,
-  closes_at timestamptz not null
-);
-
--- Spring Racing Carnival 2026 schedule — trading windows open Monday 10am
--- and close Friday 7pm, Melbourne local time (correctly AEST/AEDT per date;
--- daylight saving starts the first Sunday of October). Weeks 6 and 9 have a
--- longer gap before them — bye weeks with no separate feature-race Friday
--- of their own (Cox Plate/Cup carnival weeks), carried over from the
--- original single-deadline schedule.
-insert into public.season_weeks (week_number, label, opens_at, closes_at) values
-  (1, 'Week 1 — Memsie–Makybe Diva', '2026-08-31T00:00:00Z', '2026-09-04T09:00:00Z'),
-  (2, 'Week 2', '2026-09-07T00:00:00Z', '2026-09-11T09:00:00Z'),
-  (3, 'Week 3', '2026-09-14T00:00:00Z', '2026-09-18T09:00:00Z'),
-  (4, 'Week 4', '2026-09-21T00:00:00Z', '2026-09-25T09:00:00Z'),
-  (5, 'Week 5', '2026-09-28T00:00:00Z', '2026-10-02T09:00:00Z'),
-  (6, 'Week 6', '2026-10-11T23:00:00Z', '2026-10-16T08:00:00Z'),
-  (7, 'Week 7', '2026-10-18T23:00:00Z', '2026-10-23T08:00:00Z'),
-  (8, 'Week 8', '2026-10-25T23:00:00Z', '2026-10-30T08:00:00Z'),
-  (9, 'Week 9', '2026-11-08T23:00:00Z', '2026-11-13T08:00:00Z');
-
-alter table public.season_weeks enable row level security;
-
-create policy "season weeks are viewable by any authenticated user"
-  on public.season_weeks for select
-  to authenticated
-  using (true);
-
-create function public.get_current_week()
-returns public.season_weeks
-language sql
-stable
-as $$
-  select * from public.season_weeks where now() >= opens_at and now() < closes_at order by week_number asc limit 1;
-$$;
-
-grant execute on function public.get_current_week() to authenticated;
-
--- ----------------------------------------------------------------------------
--- start_draft — gating logic ported verbatim from startDraft() in the prototype
--- ----------------------------------------------------------------------------
-
-create function public.start_draft(p_league_id uuid)
+create or replace function public.start_draft(p_league_id uuid)
 returns public.league_draft_state
 language plpgsql
 security definer set search_path = public
@@ -126,14 +65,7 @@ begin
 end;
 $$;
 
--- ----------------------------------------------------------------------------
--- advance_draft_if_expired — resolves an expired nomination/bid clock.
--- Called internally by nominate_horse/place_bid before they act, and exposed
--- directly as advance_draft() so a client (or a poller) can tick the clock
--- even when nobody is actively bidding.
--- ----------------------------------------------------------------------------
-
-create function public.advance_draft_if_expired(p_league_id uuid)
+create or replace function public.advance_draft_if_expired(p_league_id uuid)
 returns public.league_draft_state
 language plpgsql
 security definer set search_path = public
@@ -153,9 +85,6 @@ begin
   end if;
 
   if v_state.status = 'nominating' and v_state.nomination_deadline is not null and v_state.nomination_deadline <= now() then
-    -- Prefer the admin-curated starred pool for auto-nomination (it's the
-    -- same set shown by default in the nomination UI); fall back to the
-    -- full active pool if no starred horses are left undrafted.
     select h.id into v_random_horse
     from public.horses h
     where h.status = 'active'
@@ -269,75 +198,7 @@ begin
 end;
 $$;
 
-create function public.advance_draft(p_league_id uuid)
-returns public.league_draft_state
-language sql
-security definer set search_path = public
-as $$
-  select public.advance_draft_if_expired(p_league_id);
-$$;
-
--- ----------------------------------------------------------------------------
--- nominate_horse — only the current nominator may call, and only during
--- 'nominating'. Opens the lot with the nominator as the automatic $1 bidder,
--- exactly like openLotForBidding() in the prototype.
--- ----------------------------------------------------------------------------
-
-create function public.nominate_horse(p_league_id uuid, p_horse_id uuid)
-returns public.league_draft_state
-language plpgsql
-security definer set search_path = public
-as $$
-declare
-  v_state public.league_draft_state;
-begin
-  perform public.advance_draft_if_expired(p_league_id);
-
-  select * into v_state from public.league_draft_state where league_id = p_league_id for update;
-
-  if v_state.status <> 'nominating' then
-    raise exception 'It is not time to nominate a horse right now';
-  end if;
-
-  if v_state.current_nominator_user_id <> auth.uid() then
-    raise exception 'It is not your turn to nominate';
-  end if;
-
-  if not exists (select 1 from public.horses where id = p_horse_id and status = 'active') then
-    raise exception 'That horse is not available';
-  end if;
-
-  if exists (select 1 from public.league_draft_picks where league_id = p_league_id and horse_id = p_horse_id) then
-    raise exception 'That horse has already been drafted';
-  end if;
-
-  update public.league_draft_state set
-    current_lot_horse_id = p_horse_id,
-    current_bid = 1,
-    current_bidder_user_id = auth.uid(),
-    bid_count = 1,
-    status = 'bidding',
-    bid_deadline = now() + interval '20 seconds',
-    updated_at = now()
-  where league_id = p_league_id
-  returning * into v_state;
-
-  return v_state;
-end;
-$$;
-
--- ----------------------------------------------------------------------------
--- place_bid — minimum raise is $1 above current_bid, but a manager may name
--- any higher amount up to their max bid. A soft floor, not a reset: a bid
--- only touches the clock if under 10s remain, bumping it up to exactly 10s
--- — with 10s or more left, a bid doesn't extend the clock at all, it just
--- keeps counting down from wherever it already was.
--- A bidder whose stable is already full (10/10) cannot bid — league_budget()
--- alone doesn't block this, since a full reserve of $0 for zero remaining
--- slots still allows a max_bid up to the full remaining cap-space.
--- ----------------------------------------------------------------------------
-
-create function public.place_bid(p_league_id uuid, p_bid_amount int default null)
+create or replace function public.place_bid(p_league_id uuid, p_bid_amount int default null)
 returns public.league_draft_state
 language plpgsql
 security definer set search_path = public
@@ -395,8 +256,3 @@ begin
   return v_state;
 end;
 $$;
-
-grant execute on function public.start_draft(uuid) to authenticated;
-grant execute on function public.advance_draft(uuid) to authenticated;
-grant execute on function public.nominate_horse(uuid, uuid) to authenticated;
-grant execute on function public.place_bid(uuid, int) to authenticated;

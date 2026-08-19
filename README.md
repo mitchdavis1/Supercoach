@@ -52,7 +52,7 @@ legacy/                  The original prototype + migration brief, for reference
 
 1. Create a project at [supabase.com](https://supabase.com).
 2. In the SQL Editor, run each file in `supabase/migrations/` **in order**
-   (0001 → 0018, skipping 0005 — removed along with the Captain/VC feature).
+   (0001 → 0019, skipping 0005 — removed along with the Captain/VC feature).
    They're plain SQL, so `supabase db push` via the CLI works
    too if you prefer.
 3. In Authentication → Providers, email/password should already be enabled
@@ -129,12 +129,14 @@ It's a static site — no build step. Any of these work:
 2. Optionally schedule a draft time — the manager can always start early or
    with no schedule set; everyone else has to wait for the scheduled time.
 3. Start Draft. The nominator rotates in join order; nominating a horse
-   opens it at a $1 bid in your name; the 20s bid clock resets on every
-   raise; a 30s nomination clock auto-nominates a random horse if the
-   person on the clock doesn't act in time. Nobody needs to keep a tab open
-   for the clock to resolve — every RPC call (anyone bidding, nominating,
-   or just calling `advance_draft`) checks and resolves an expired clock
-   first.
+   opens it at a $1 bid in your name, with a 20s bid clock. A bid is a soft
+   floor, not a reset: it only bumps the clock — up to 10s remaining — if
+   it's already below that; with 10s or more left, a bid doesn't touch the
+   clock at all. A 20s nomination clock auto-nominates a random horse
+   (preferring the admin-starred pool) if the person on the clock doesn't
+   act in time. Nobody needs to keep a tab open for the clock to resolve —
+   every RPC call (anyone bidding, nominating, or just calling
+   `advance_draft`) checks and resolves an expired clock first.
 
 ## Design notes / things a future pass should look at
 
