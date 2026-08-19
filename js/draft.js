@@ -187,7 +187,7 @@ export function renderDraftPage() {
   if (startBtn) startBtn.style.display = 'none';
 
   if (s.status === 'complete') {
-    container.innerHTML = draftCompleteBannerHTML() + draftLayoutBottomHTML();
+    container.innerHTML = draftCompleteBannerHTML() + draftSummaryHTML();
     return;
   }
 
@@ -232,8 +232,39 @@ function draftLayoutHTML(league, s) {
     </div>`;
 }
 
-function draftLayoutBottomHTML() {
-  return `<div class="draft-layout"><div></div><div>${draftLogHTML()}</div></div>`;
+function draftSummaryHTML() {
+  const byUser = new Map();
+  state.draftPicks.forEach((p) => {
+    if (!byUser.has(p.user_id)) byUser.set(p.user_id, []);
+    byUser.get(p.user_id).push(p);
+  });
+
+  const teams = state.members.map((m) => {
+    const picks = (byUser.get(m.user_id) || []).slice().sort((a, b) => b.price_paid - a.price_paid);
+    const spent = picks.reduce((sum, p) => sum + p.price_paid, 0);
+    return { m, picks, spent };
+  });
+
+  const teamCard = ({ m, picks, spent }) => `
+    <div class="draft-summary-team">
+      <div class="draft-summary-team-header">
+        <span>${escapeHtml(m.profiles?.display_name || m.profiles?.username)}</span>
+        <span class="draft-summary-team-spent">$${spent} / $100</span>
+      </div>
+      <div class="draft-summary-team-body">
+        ${picks.map((p) => `
+          <div class="draft-summary-row">
+            <strong>${escapeHtml(state.horsesById.get(p.horse_id)?.name || '')}</strong>
+            <span class="draft-summary-price">$${p.price_paid}</span>
+          </div>`).join('') || '<div class="draft-summary-empty">No horses</div>'}
+      </div>
+    </div>`;
+
+  return `
+    <div class="draft-summary">
+      <div class="draft-summary-header">🏁 Draft Summary — ${state.draftPicks.length} horses drafted</div>
+      <div class="draft-summary-grid">${teams.map(teamCard).join('')}</div>
+    </div>`;
 }
 
 function draftLotCardHTML(league, s) {

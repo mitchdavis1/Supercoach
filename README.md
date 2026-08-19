@@ -40,7 +40,7 @@ js/
   transfers.js              Weekly transfer flow
   scoring.js                 Leaderboard (100% prizemoney earned since acquiring each horse)
   admin-import.js             Horse pool / acceptances / prizemoney import
-  inplay.js                    "My Stable — Acceptances" view
+  inplay.js                    League Acceptances view
   app.js                        Entry point: page router, wires everything
 supabase/migrations/    Ordered SQL migrations — schema, RLS, RPCs
 legacy/                  The original prototype + migration brief, for reference
