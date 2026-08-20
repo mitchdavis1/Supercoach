@@ -658,6 +658,7 @@ body { background: #FFF5FA; color: #1A1F5E; min-height: 100vh; font-family: 'Int
 .draft-custom-bid { background: #FFF5FA; border: 2px solid #FFD6EC; border-radius: 7px; padding: 8px 10px; width: 100px; font-size: 12px; color: #1A1F5E; outline: none; font-family: inherit; }
 .draft-custom-bid:focus { border-color: #E8007D; }
 
+.draft-max-bid-hint { font-size: 11px; color: #7080b0; margin-top: 10px; }
 .draft-you-winning { background: #e8fff2; border: 1.5px solid #2a9a50; color: #2a7a50; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 700; margin-top: 14px; }
 .draft-you-outbid  { background: #fff0f0; border: 1.5px solid #cc3344; color: #cc3344; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 700; margin-top: 14px; }
 

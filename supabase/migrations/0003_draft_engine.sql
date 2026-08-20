@@ -377,7 +377,7 @@ begin
   end if;
 
   if v_bid > v_max_bid then
-    raise exception 'That bid exceeds your maximum of $% once reserve for your remaining slots is held back', v_max_bid;
+    raise exception 'Bid exceeds remaining cap space — your max is $%', v_max_bid;
   end if;
 
   update public.league_draft_state set

@@ -323,6 +323,7 @@ function draftLotCardHTML(league, s) {
             <button class="draft-bid-chip" ${iAmLeading ? 'disabled' : ''} onclick="placeCustomBid()">Place</button>
           </div>
         </div>
+        <div class="draft-max-bid-hint">Your max bid: $${maxBidFor(state.session.user.id)}</div>
         ${iAmLeading ? `<div class="draft-you-winning">✅ You're the highest bidder</div>` : `<div class="draft-you-outbid">You need to bid to stay in this lot</div>`}
       </div>`;
   }
