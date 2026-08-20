@@ -192,6 +192,13 @@ function renderOutcomeBanner() {
 
 function renderWaiverOrder() {
   const el = document.getElementById('waiverOrderList');
+  const title = document.getElementById('waiverOrderTitle');
+  if (title) {
+    const label = currentWeek ? currentWeek.label : nextWeek ? nextWeek.label : null;
+    title.textContent = label
+      ? `Waiver Order for ${label} — rotates every week regardless of use`
+      : 'Waiver Order — rotates every week regardless of use';
+  }
   if (!el) return;
   if (!waiverOrder.length) {
     el.innerHTML = `<div class="transfer-empty" style="padding:16px">Waiver order is set once your league's draft is complete.</div>`;

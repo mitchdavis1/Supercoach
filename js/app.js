@@ -78,7 +78,18 @@ async function renderActivePage() {
   if (activePage === 'myteam') renderMyStablePage();
 }
 
+let signedInUserId = null;
+
 async function onSignedIn() {
+  // Supabase fires onAuthStateChange (and re-invokes this) on more than
+  // just a fresh login — a background token refresh, or a tab regaining
+  // focus, both trigger it too, with the same already-signed-in user. Only
+  // run the full app initialization (which ends by jumping to the Draft
+  // page) for a genuinely new sign-in, so a background refresh can't yank
+  // the user away from whatever page they're on or reset in-progress state.
+  if (state.session?.user?.id === signedInUserId) return;
+  signedInUserId = state.session?.user?.id ?? null;
+
   document.getElementById('authGate').style.display = 'none';
   document.getElementById('appShell').style.display = 'block';
   document.getElementById('userBadgeName').textContent = state.profile?.display_name || state.profile?.username || '';
@@ -103,6 +114,7 @@ async function onSignedIn() {
 }
 
 function onSignedOut() {
+  signedInUserId = null;
   document.getElementById('authGate').style.display = 'flex';
   document.getElementById('appShell').style.display = 'none';
 }
