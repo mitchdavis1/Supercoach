@@ -13,7 +13,7 @@ let myRequest = null; // this user's request for the currently-open week, if any
 let lastOutcome = null; // this user's most recently processed (fulfilled/rejected) request
 let pollInterval = null;
 
-export async function loadTransferContext() {
+export async function loadTransferContext(syncSelection = true) {
   const league = getActiveLeague();
   if (!league) return;
 
@@ -39,12 +39,18 @@ export async function loadTransferContext() {
   myRequest = currentWeek ? (myRequests || []).find((r) => r.week_number === currentWeek.week_number) || null : null;
   lastOutcome = (myRequests || []).find((r) => r.status !== 'pending') || null;
 
-  if (myRequest) {
-    transferOutId = myRequest.horse_out_id;
-    choiceIds = [myRequest.choice_1_horse_id, myRequest.choice_2_horse_id, myRequest.choice_3_horse_id];
-  } else {
-    transferOutId = null;
-    choiceIds = [null, null, null];
+  // Background polling refreshes read-only data (order/log/outcome) without
+  // clobbering a selection the user is still mid-way through choosing —
+  // only re-sync from the server on the initial page-enter load and right
+  // after a submit, when there's nothing unsaved to lose.
+  if (syncSelection) {
+    if (myRequest) {
+      transferOutId = myRequest.horse_out_id;
+      choiceIds = [myRequest.choice_1_horse_id, myRequest.choice_2_horse_id, myRequest.choice_3_horse_id];
+    } else {
+      transferOutId = null;
+      choiceIds = [null, null, null];
+    }
   }
 
   const { loadStable } = await import('./stable.js');
@@ -54,7 +60,7 @@ export async function loadTransferContext() {
 export function startTransferPolling() {
   stopTransferPolling();
   pollInterval = setInterval(async () => {
-    await loadTransferContext();
+    await loadTransferContext(false);
     renderTransferPage();
   }, 30000);
 }
