@@ -19,7 +19,7 @@ export async function loadTransferContext(syncSelection = true) {
 
   await supabase.rpc('check_league_waivers', { p_league_id: league.id }).catch(() => {});
 
-  const [{ data: weeks }, { data: owned }, { data: log }, { data: order }, { data: myRequests }] = await Promise.all([
+  const [weeksRes, ownedRes, logRes, orderRes, myReqRes] = await Promise.all([
     supabase.from('season_weeks').select('*').order('week_number'),
     supabase.from('stables').select('horse_id, user_id').eq('league_id', league.id),
     supabase.from('transfers').select('*, profiles(username, display_name)').eq('league_id', league.id).order('transferred_at', { ascending: false }).limit(30),
@@ -27,17 +27,29 @@ export async function loadTransferContext(syncSelection = true) {
     supabase.from('waiver_requests').select('*').eq('league_id', league.id).eq('user_id', state.session.user.id).order('week_number', { ascending: false }).limit(2),
   ]);
 
+  // A transient failure on any one of these (e.g. a request racing an auth
+  // token refresh) shouldn't blank out already-correct state — log it and
+  // keep whatever we last had rather than falsely showing "Season closed"
+  // or an empty stable/log for this refresh.
+  [
+    ['season_weeks', weeksRes], ['stables', ownedRes], ['transfers', logRes],
+    ['league_waiver_order', orderRes], ['waiver_requests', myReqRes],
+  ].forEach(([name, res]) => { if (res.error) console.error(`Could not load ${name} for transfer context`, res.error); });
+
   const nowMs = Date.now();
-  seasonWeeks = weeks || [];
+  if (!weeksRes.error) seasonWeeks = weeksRes.data || [];
   currentWeek = seasonWeeks.find((w) => new Date(w.opens_at).getTime() <= nowMs && nowMs < new Date(w.closes_at).getTime()) || null;
   nextWeek = currentWeek ? null : seasonWeeks.find((w) => new Date(w.opens_at).getTime() > nowMs) || null;
 
-  leagueOwnedHorseIds = new Set((owned || []).filter((s) => s.user_id !== state.session.user.id).map((s) => s.horse_id));
-  transferLog = log || [];
-  waiverOrder = order || [];
+  if (!ownedRes.error) {
+    leagueOwnedHorseIds = new Set((ownedRes.data || []).filter((s) => s.user_id !== state.session.user.id).map((s) => s.horse_id));
+  }
+  if (!logRes.error) transferLog = logRes.data || [];
+  if (!orderRes.error) waiverOrder = orderRes.data || [];
 
-  myRequest = currentWeek ? (myRequests || []).find((r) => r.week_number === currentWeek.week_number) || null : null;
-  lastOutcome = (myRequests || []).find((r) => r.status !== 'pending') || null;
+  const myRequests = myReqRes.error ? [] : (myReqRes.data || []);
+  myRequest = currentWeek ? myRequests.find((r) => r.week_number === currentWeek.week_number) || null : null;
+  lastOutcome = myRequests.find((r) => r.status !== 'pending') || null;
 
   // Background polling refreshes read-only data (order/log/outcome) without
   // clobbering a selection the user is still mid-way through choosing —
