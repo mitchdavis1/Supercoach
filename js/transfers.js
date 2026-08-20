@@ -17,7 +17,11 @@ export async function loadTransferContext(syncSelection = true) {
   const league = getActiveLeague();
   if (!league || !state.session) return;
 
-  await supabase.rpc('check_league_waivers', { p_league_id: league.id }).catch(() => {});
+  try {
+    await supabase.rpc('check_league_waivers', { p_league_id: league.id });
+  } catch (e) {
+    console.error('check_league_waivers failed', e);
+  }
 
   const [weeksRes, ownedRes, logRes, orderRes, myReqRes] = await Promise.all([
     supabase.from('season_weeks').select('*').order('week_number'),
