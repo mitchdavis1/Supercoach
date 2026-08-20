@@ -52,7 +52,7 @@ legacy/                  The original prototype + migration brief, for reference
 
 1. Create a project at [supabase.com](https://supabase.com).
 2. In the SQL Editor, run each file in `supabase/migrations/` **in order**
-   (0001 → 0020, skipping 0005 — removed along with the Captain/VC feature).
+   (0001 → 0021, skipping 0005 — removed along with the Captain/VC feature).
    They're plain SQL, so `supabase db push` via the CLI works
    too if you prefer.
 3. In Authentication → Providers, email/password should already be enabled
@@ -155,6 +155,21 @@ It's a static site — no build step. Any of these work:
   stays open until someone reconnects. A `pg_cron` job calling
   `advance_draft()` for in-progress leagues on a short interval would make
   this fully unattended if that matters for your use case.
+- **Weekly transfers are waiver-based, not first-come-first-served.**
+  Transferring a horse out means picking up to 3 incoming horses in
+  priority order; nothing happens until the window closes (Friday 5pm
+  AEDT). At that point every league with a completed draft works through
+  its pending requests in waiver order — each manager gets their
+  highest-priority pick that's still unclaimed, or their transfer is
+  rejected outright if all 3 are already gone. The order rotates every
+  week regardless of use (1st drops to last, everyone else moves up one);
+  the starting order is set once, right when a league's draft completes,
+  by remaining cap space (most first, ties randomised). Like the draft
+  clock, processing is self-healing rather than cron-driven —
+  `process_league_waivers_if_due()` runs opportunistically from
+  `submit_waiver_request` and from a `check_league_waivers()` poll on the
+  Stable Transfer page — so the same "nobody has a tab open" caveat above
+  applies here too.
 - **The SQL migrations haven't been run against a live project yet** — they're
   written carefully against the brief and the extracted prototype logic,
   but give the draft flow (start → nominate → bid → timeout → award →

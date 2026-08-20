@@ -247,7 +247,7 @@
         <div class="transfer-hero-icon">🔄</div>
         <div>
           <div class="transfer-hero-title">Stable Transfer</div>
-          <div class="transfer-hero-sub">Swap one <strong style="color:#FFD6EC;">horse</strong> per week · Windows run Monday 10am AEDT to Friday 7pm AEDT · No $ value on transfers, the cap only applies during the draft</div>
+          <div class="transfer-hero-sub">Swap one <strong style="color:#FFD6EC;">horse</strong> per week via waiver order · Windows run Monday 10am AEDT to Friday 5pm AEDT · Pick up to 3 backups — no $ value on transfers, the cap only applies during the draft</div>
         </div>
         <div class="transfer-hero-right">
           <div class="transfer-allowance" id="transferAllowanceDisplay">1</div>
@@ -264,6 +264,11 @@
         </div>
       </div>
 
+      <div class="waiver-outcome-banner" id="waiverOutcomeBanner" style="display:none"></div>
+
+      <div class="transfer-log-title">Waiver Order — rotates every week regardless of use</div>
+      <div class="waiver-order-strip" id="waiverOrderList"></div>
+
       <div class="transfer-layout">
 
         <div class="transfer-panel">
@@ -277,9 +282,10 @@
 
         <div class="transfer-panel">
           <div class="transfer-panel-header in">
-            ⬇️ Step 2 — Select replacement horse to transfer IN
+            ⬇️ Step 2 — Pick up to 3 backup horses to transfer IN, in priority order
           </div>
           <div class="transfer-panel-body">
+            <div class="waiver-priority-slots" id="waiverPrioritySlots"></div>
             <div id="transferInPanel">
               <div class="transfer-empty">
                 <div class="transfer-empty-icon">👆</div>
@@ -299,7 +305,7 @@
           <div class="confirm-chip in" id="confirmChipIn">—</div>
         </div>
         <span class="confirm-budget-note" id="confirmBudgetNote"></span>
-        <button class="confirm-btn" id="confirmTransferBtn" onclick="confirmTransfer()">Confirm Transfer</button>
+        <button class="confirm-btn" id="confirmTransferBtn" onclick="submitWaiverRequest()">Submit Waiver Request</button>
       </div>
 
       <div class="transfer-log">

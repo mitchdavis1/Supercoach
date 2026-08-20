@@ -3,7 +3,7 @@ import { initAuth, handleSignIn, handleJoin, logout, switchAuthTab, handleForgot
 import { loadMyLeagues, onLeagueUpdate, createLeague, joinLeagueByCode, scheduleDraft, leaveLeague, setActiveLeague, renderLeaguePage } from './league.js';
 import { loadHorses, loadDraftState, loadDraftPicks, subscribeToDraft, onDraftUpdate, startDraft, nominateHorse, placeYourBid, placeCustomBid, filterNominationList, renderDraftPage } from './draft.js';
 import { loadStable, renderMyStablePage } from './stable.js';
-import { selectTransferOut, selectTransferIn, filterReplacements, confirmTransfer, loadTransferContext, renderTransferPage } from './transfers.js';
+import { selectTransferOut, selectChoice, filterReplacements, submitWaiverRequest, loadTransferContext, renderTransferPage, startTransferPolling, stopTransferPolling } from './transfers.js';
 import { loadPrizemoney, renderLeaderboard, setLbRound } from './scoring.js';
 import { renderInPlay } from './inplay.js';
 import { handleHorsePoolFile, handleAcceptancesFile, handleResultsFile, handleStarredHorsesFile, resetImportedData, resetLeagueDraft, renderAdminStats, filterHorseCurationList, toggleHorseStar, forceConfirmEmail, sendPasswordReset } from './admin-import.js';
@@ -29,9 +29,9 @@ window.placeYourBid = placeYourBid;
 window.placeCustomBid = placeCustomBid;
 window.filterNominationList = filterNominationList;
 window.selectTransferOut = selectTransferOut;
-window.selectTransferIn = selectTransferIn;
+window.selectChoice = selectChoice;
 window.filterReplacements = filterReplacements;
-window.confirmTransfer = confirmTransfer;
+window.submitWaiverRequest = submitWaiverRequest;
 window.setLbRound = setLbRound;
 window.handleHorsePoolFile = handleHorsePoolFile;
 window.handleAcceptancesFile = handleAcceptancesFile;
@@ -52,6 +52,7 @@ function showPage(page) {
   });
   document.getElementById('page-' + page)?.classList.add('active');
   document.getElementById('nav-' + page)?.classList.add('active');
+  if (page === 'transfer') startTransferPolling(); else stopTransferPolling();
   renderActivePage();
 }
 

@@ -164,6 +164,27 @@
   display: flex; align-items: center; gap: 10px;
 }
 
+/* Waiver outcome banner */
+.waiver-outcome-banner { align-items: center; gap: 10px; border-radius: 10px; padding: 12px 16px; font-size: 12px; font-weight: 700; margin-bottom: 16px; }
+.waiver-outcome-banner.won { background: #e8fff2; border: 1.5px solid #2a9a50; color: #2a7a50; }
+.waiver-outcome-banner.rejected { background: #fff0f0; border: 1.5px solid #cc3344; color: #cc3344; }
+
+/* Waiver order strip */
+.waiver-order-strip { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0 18px; }
+.waiver-order-row { display: flex; align-items: center; gap: 6px; background: #fff; border: 1.5px solid #FFD6EC; border-radius: 20px; padding: 5px 12px 5px 5px; flex-shrink: 0; }
+.waiver-order-row.you { border-color: #E8007D; background: #FFF0F8; }
+.waiver-order-pos { width: 20px; height: 20px; border-radius: 50%; background: #1A1F5E; color: #FFD6EC; font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.waiver-order-name { font-size: 11px; font-weight: 700; color: #1A1F5E; white-space: nowrap; }
+
+/* Waiver priority slots */
+.waiver-priority-slots { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+.waiver-slot { display: flex; align-items: center; gap: 8px; background: #FFF5FA; border: 1.5px dashed #FFD6EC; border-radius: 8px; padding: 8px 10px; }
+.waiver-slot.filled { border-style: solid; border-color: #2a7a50; background: #f0fff8; }
+.waiver-slot-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 800; color: #7080b0; flex-shrink: 0; width: 90px; }
+.waiver-slot-horse { font-size: 12px; font-weight: 700; color: #1A1F5E; flex: 1; }
+.waiver-slot-empty { font-size: 12px; color: #c0a0b8; flex: 1; }
+.waiver-slot-clear { background: none; border: none; color: #cc3344; font-weight: 900; cursor: pointer; font-size: 12px; padding: 2px 4px; }
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { background: #FFF5FA; color: #1A1F5E; min-height: 100vh; font-family: 'Inter', 'Segoe UI', sans-serif; }
 
