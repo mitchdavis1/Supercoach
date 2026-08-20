@@ -15,7 +15,7 @@ let pollInterval = null;
 
 export async function loadTransferContext(syncSelection = true) {
   const league = getActiveLeague();
-  if (!league) return;
+  if (!league || !state.session) return;
 
   await supabase.rpc('check_league_waivers', { p_league_id: league.id }).catch(() => {});
 
@@ -60,7 +60,11 @@ export async function loadTransferContext(syncSelection = true) {
 export function startTransferPolling() {
   stopTransferPolling();
   pollInterval = setInterval(async () => {
-    await loadTransferContext(false);
+    try {
+      await loadTransferContext(false);
+    } catch (e) {
+      console.error('Could not refresh transfer context', e);
+    }
     renderTransferPage();
   }, 30000);
 }

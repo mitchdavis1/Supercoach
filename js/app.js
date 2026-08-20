@@ -70,7 +70,14 @@ async function switchActiveLeague(leagueId) {
 
 async function renderActivePage() {
   if (activePage === 'leaderboard') await renderLeaderboard();
-  if (activePage === 'transfer') { await loadTransferContext(); renderTransferPage(); }
+  if (activePage === 'transfer') {
+    try {
+      await loadTransferContext();
+    } catch (e) {
+      console.error('Could not load transfer context', e);
+    }
+    renderTransferPage();
+  }
   if (activePage === 'inplay') await renderInPlay();
   if (activePage === 'draft') renderDraftPage();
   if (activePage === 'dataimport') await renderAdminStats();
