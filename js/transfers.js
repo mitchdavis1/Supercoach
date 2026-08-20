@@ -114,7 +114,7 @@ export function selectChoice(horseId) {
 }
 
 export function filterReplacements() {
-  renderInPanel(canEditNow());
+  renderReplacementList(canEditNow());
 }
 
 export async function submitWaiverRequest() {
@@ -280,6 +280,23 @@ function renderInPanel(canEdit) {
     return;
   }
 
+  // Only build the search input + list wrapper once per "picking a
+  // replacement" session — rebuilding it on every keystroke (via innerHTML)
+  // destroys and recreates the <input>, which drops focus after each
+  // character typed. Once it exists, just refresh the results below it.
+  if (!document.getElementById('replacementSearch')) {
+    panel.innerHTML = `
+      <input class="replacement-search" id="replacementSearch" placeholder="Search horses…" oninput="filterReplacements()" />
+      <div class="replacement-list" id="replacementList"></div>`;
+  }
+
+  renderReplacementList(canEdit);
+}
+
+function renderReplacementList(canEdit) {
+  const list = document.getElementById('replacementList');
+  if (!list) return;
+
   const search = (document.getElementById('replacementSearch')?.value || '').toLowerCase();
   const currentIds = new Set(state.stable.map((s) => s.horse_id));
   const pool = state.horses
@@ -288,20 +305,16 @@ function renderInPanel(canEdit) {
     .sort((a, b) => a.name.localeCompare(b.name))
     .slice(0, 200);
 
-  panel.innerHTML = `
-    <input class="replacement-search" id="replacementSearch" placeholder="Search horses…" oninput="filterReplacements()" value="${escapeHtml(search)}" />
-    <div class="replacement-list">
-      ${pool.map((h) => {
-        const slot = choiceIds.indexOf(h.id);
-        const disabled = !canEdit || (slot === -1 && !choiceIds.includes(null));
-        return `
-        <div class="replacement-row ${slot !== -1 ? 'selecting-in' : ''} ${disabled ? 'cant' : ''}" onclick="${disabled ? '' : `selectChoice('${h.id}')`}">
-          <div class="spr-avatar horse">${h.emoji || '🐎'}</div>
-          <div class="spr-info"><div class="spr-name">${escapeHtml(h.name)}</div><div class="spr-meta">${escapeHtml(h.trainer || '')}</div></div>
-          ${slot !== -1 ? `<span class="in-badge">P${slot + 1}</span>` : ''}
-        </div>`;
-      }).join('') || '<div class="transfer-empty">No horses match</div>'}
+  list.innerHTML = pool.map((h) => {
+    const slot = choiceIds.indexOf(h.id);
+    const disabled = !canEdit || (slot === -1 && !choiceIds.includes(null));
+    return `
+    <div class="replacement-row ${slot !== -1 ? 'selecting-in' : ''} ${disabled ? 'cant' : ''}" onclick="${disabled ? '' : `selectChoice('${h.id}')`}">
+      <div class="spr-avatar horse">${h.emoji || '🐎'}</div>
+      <div class="spr-info"><div class="spr-name">${escapeHtml(h.name)}</div><div class="spr-meta">${escapeHtml(h.trainer || '')}</div></div>
+      ${slot !== -1 ? `<span class="in-badge">P${slot + 1}</span>` : ''}
     </div>`;
+  }).join('') || '<div class="transfer-empty">No horses match</div>';
 }
 
 function renderSubmitStrip() {
