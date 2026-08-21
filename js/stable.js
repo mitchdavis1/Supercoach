@@ -57,6 +57,31 @@ export function renderMyStablePage() {
   }).join('');
 
   container.innerHTML = `<div class="section-header">Your Stable (${state.stable.length}/10)</div>${rows}`;
+
+  renderFuturesTile();
+}
+
+function renderFuturesTile() {
+  const tile = document.getElementById('myteamFuturesTile');
+  if (!tile) return;
+
+  const groups = state.stable
+    .map((s) => ({ horse: state.horsesById.get(s.horse_id), markets: state.futuresByHorse.get(s.horse_id) }))
+    .filter((g) => g.horse && g.markets?.length);
+
+  tile.innerHTML = `
+    <div class="futures-tile-header">🔮 Futures Watch</div>
+    <div class="futures-tile-body">
+      ${groups.map((g) => `
+        <div class="futures-horse-group">
+          <div class="futures-horse-name">${escapeHtml(g.horse.name)}</div>
+          ${g.markets.map((m) => `
+            <div class="futures-row">
+              <span class="futures-race">${escapeHtml(m.race_name)}</span>
+              <span class="futures-odds">${m.odds != null ? '$' + m.odds : '—'}</span>
+            </div>`).join('')}
+        </div>`).join('') || '<div class="futures-empty">None of your horses are in a futures market yet.</div>'}
+    </div>`;
 }
 
 function fmtMoney(n) {

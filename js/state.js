@@ -15,6 +15,7 @@ export const state = {
   members: [],              // league_members rows (+profile) for the active league
   acceptances: [],
   prizemoneyByHorse: new Map(),
+  futuresByHorse: new Map(), // horse_id -> [{race_name, odds}], sorted shortest-odds first
   realtimeChannel: null,
 };
 

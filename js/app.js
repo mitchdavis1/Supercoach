@@ -4,9 +4,9 @@ import { loadMyLeagues, onLeagueUpdate, createLeague, joinLeagueByCode, schedule
 import { loadHorses, loadDraftState, loadDraftPicks, subscribeToDraft, onDraftUpdate, startDraft, nominateHorse, placeYourBid, placeCustomBid, filterNominationList, renderDraftPage } from './draft.js';
 import { loadStable, renderMyStablePage } from './stable.js';
 import { selectTransferOut, selectChoice, filterReplacements, submitWaiverRequest, loadTransferContext, renderTransferPage, startTransferPolling, stopTransferPolling } from './transfers.js';
-import { loadPrizemoney, renderLeaderboard, setLbRound } from './scoring.js';
+import { loadPrizemoney, loadFuturesOdds, renderLeaderboard, setLbRound } from './scoring.js';
 import { renderInPlay } from './inplay.js';
-import { handleHorsePoolFile, handleAcceptancesFile, handleResultsFile, handleStarredHorsesFile, resetImportedData, resetLeagueDraft, renderAdminStats, filterHorseCurationList, toggleHorseStar, forceConfirmEmail, sendPasswordReset } from './admin-import.js';
+import { handleHorsePoolFile, handleAcceptancesFile, handleResultsFile, handleStarredHorsesFile, handleFuturesOddsFile, resetImportedData, resetLeagueDraft, renderAdminStats, filterHorseCurationList, toggleHorseStar, forceConfirmEmail, sendPasswordReset } from './admin-import.js';
 
 const PAGES = ['myteam', 'draft', 'transfer', 'leaderboard', 'rules', 'joinleague', 'inplay', 'dataimport'];
 let activePage = 'draft';
@@ -37,6 +37,7 @@ window.handleHorsePoolFile = handleHorsePoolFile;
 window.handleAcceptancesFile = handleAcceptancesFile;
 window.handleResultsFile = handleResultsFile;
 window.handleStarredHorsesFile = handleStarredHorsesFile;
+window.handleFuturesOddsFile = handleFuturesOddsFile;
 window.resetImportedData = resetImportedData;
 window.resetLeagueDraft = resetLeagueDraft;
 window.filterHorseCurationList = filterHorseCurationList;
@@ -106,6 +107,7 @@ async function onSignedIn() {
 
   await loadHorses();
   await loadPrizemoney();
+  await loadFuturesOdds();
   await loadMyLeagues();
 
   if (state.activeLeagueId) {

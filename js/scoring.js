@@ -21,6 +21,21 @@ export async function loadPrizemoney() {
   state.prizemoneyByHorse = new Map((data || []).map((p) => [p.horse_id, Number(p.total_prizemoney)]));
 }
 
+export async function loadFuturesOdds() {
+  const { data, error } = await supabase.from('futures_odds').select('horse_id, race_name, odds');
+  if (error) {
+    console.error('Could not load futures odds', error);
+    return;
+  }
+  const byHorse = new Map();
+  (data || []).forEach((f) => {
+    if (!byHorse.has(f.horse_id)) byHorse.set(f.horse_id, []);
+    byHorse.get(f.horse_id).push({ race_name: f.race_name, odds: f.odds != null ? Number(f.odds) : null });
+  });
+  byHorse.forEach((markets) => markets.sort((a, b) => (a.odds ?? Infinity) - (b.odds ?? Infinity)));
+  state.futuresByHorse = byHorse;
+}
+
 function scoreForStable(stableRows, bankedEarnings) {
   const fromHorses = stableRows.reduce((total, s) => total + earnedForStableRow(s), 0);
   return fromHorses + (Number(bankedEarnings) || 0);

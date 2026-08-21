@@ -325,6 +325,7 @@ function draftLotCardHTML(league, s) {
         </div>
         <div class="draft-max-bid-hint">Your max bid: $${maxBidFor(state.session.user.id)}</div>
         ${iAmLeading ? `<div class="draft-you-winning">✅ You're the highest bidder</div>` : `<div class="draft-you-outbid">You need to bid to stay in this lot</div>`}
+        ${draftFuturesHTML(s.current_lot_horse_id)}
       </div>`;
   }
 
@@ -406,6 +407,18 @@ function draftCompleteBannerHTML() {
       <div style="font-family:'Anton',Impact,sans-serif;font-size:22px;">🏁 Draft Complete!</div>
       <div>Your stable is set — head to My Stable to check it out.</div>
       <button class="draft-import-btn" onclick="showPage('myteam')">View My Stable</button>
+    </div>`;
+}
+
+function draftFuturesHTML(horseId) {
+  const markets = state.futuresByHorse.get(horseId);
+  if (!markets?.length) return '';
+  return `
+    <div class="draft-futures">
+      <div class="draft-futures-label">🔮 Futures Markets</div>
+      <div class="draft-futures-list">
+        ${markets.map((m) => `<div class="draft-futures-chip">${escapeHtml(m.race_name)}<strong>${m.odds != null ? '$' + m.odds : '—'}</strong></div>`).join('')}
+      </div>
     </div>`;
 }
 
