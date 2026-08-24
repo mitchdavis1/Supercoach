@@ -314,16 +314,6 @@ body { background: #FFF5FA; color: #1A1F5E; min-height: 100vh; font-family: 'Int
 .info-banner { background: #EEF0FF; border: 1px solid #c0c8ff; border-radius: 8px; padding: 10px 14px; margin-bottom: 14px; font-size: 11px; color: #2D3480; display: flex; gap: 8px; align-items: flex-start; }
 .info-banner strong { color: #1A1F5E; }
 
-/* ── FUTURES ODDS CHIPS ── */
-.futures-row { display: flex; gap: 5px; margin-top: 5px; flex-wrap: wrap; }
-.futures-chip {
-  display: inline-flex; align-items: center; gap: 0;
-  border-radius: 5px; overflow: hidden; font-size: 9px; font-weight: 700;
-  border: 1px solid #1A1F5E; flex-shrink: 0;
-}
-.futures-race { background: #1A1F5E; color: #FFD6EC; padding: 2px 6px; letter-spacing: 0.3px; }
-.futures-odds { background: #E8007D; color: #fff; padding: 2px 6px; letter-spacing: 0.5px; }
-
 /* ── DATA FRESHNESS BADGE ── */
 .data-badge { background: #1a3a10; color: #7aee7a; border: 1px solid #2a6a20; font-size: 9px; font-weight: 700; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; margin-left: 8px; }
 
