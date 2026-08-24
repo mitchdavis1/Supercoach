@@ -245,10 +245,23 @@ function renderCurrentStable(canEdit) {
         <div class="spr-info">
           <div class="spr-name">${escapeHtml(horse?.name || 'Horse')}</div>
           <div class="spr-meta">${s.paid_price != null ? `$${s.paid_price} paid` : 'Free transfer'}</div>
+          ${futuresChipsHTML(s.horse_id)}
         </div>
         ${isOut ? '<span class="out-badge">OUT</span>' : ''}
       </div>`;
   }).join('') || '<div class="transfer-empty">No horses yet</div>';
+}
+
+function futuresChipsHTML(horseId) {
+  const markets = state.futuresByHorse.get(horseId);
+  if (!markets?.length) return '';
+  const shown = markets.slice(0, 3);
+  const extra = markets.length - shown.length;
+  return `
+    <div class="spr-futures">
+      ${shown.map((m) => `<span class="spr-futures-chip">${escapeHtml(m.race_name)}<strong>${m.odds != null ? '$' + m.odds : '—'}</strong></span>`).join('')}
+      ${extra > 0 ? `<span class="spr-futures-more">+${extra} more</span>` : ''}
+    </div>`;
 }
 
 function renderPrioritySlots(canEdit) {
@@ -311,7 +324,7 @@ function renderReplacementList(canEdit) {
     return `
     <div class="replacement-row ${slot !== -1 ? 'selecting-in' : ''} ${disabled ? 'cant' : ''}" onclick="${disabled ? '' : `selectChoice('${h.id}')`}">
       <div class="spr-avatar horse">${h.emoji || '🐎'}</div>
-      <div class="spr-info"><div class="spr-name">${escapeHtml(h.name)}</div><div class="spr-meta">${escapeHtml(h.trainer || '')}</div></div>
+      <div class="spr-info"><div class="spr-name">${escapeHtml(h.name)}</div><div class="spr-meta">${escapeHtml(h.trainer || '')}</div>${futuresChipsHTML(h.id)}</div>
       ${slot !== -1 ? `<span class="in-badge">P${slot + 1}</span>` : ''}
     </div>`;
   }).join('') || '<div class="transfer-empty">No horses match</div>';

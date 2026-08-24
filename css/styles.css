@@ -64,6 +64,10 @@
 .spr-name { font-size: 12px; font-weight: 700; color: #1A1F5E; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .spr-meta { font-size: 10px; color: #7080b0; }
 .spr-price { font-size: 12px; font-weight: 800; color: #E8007D; flex-shrink: 0; }
+.spr-futures { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.spr-futures-chip { background: #FFF5FA; border: 1px solid #FFD6EC; border-radius: 10px; padding: 1px 7px; font-size: 9px; font-weight: 700; color: #1A1F5E; white-space: nowrap; }
+.spr-futures-chip strong { color: #E8007D; margin-left: 3px; }
+.spr-futures-more { font-size: 9px; color: #a080a0; font-weight: 700; align-self: center; }
 
 .out-badge { background: #cc3344; color: #fff; font-size: 8px; font-weight: 900; padding: 2px 6px; border-radius: 3px; text-transform: uppercase; flex-shrink: 0; }
 .active-to-bench-btn { background: transparent; border: 1.5px solid #b0a0d0; color: #8070b0; font-size: 9px; font-weight: 800; padding: 2px 7px; border-radius: 4px; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; font-family: inherit; transition: all 0.2s; flex-shrink: 0; }
