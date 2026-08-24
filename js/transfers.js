@@ -312,11 +312,15 @@ function renderReplacementList(canEdit) {
 
   const search = (document.getElementById('replacementSearch')?.value || '').toLowerCase();
   const currentIds = new Set(state.stable.map((s) => s.horse_id));
-  const pool = state.horses
-    .filter((h) => h.status === 'active' && !currentIds.has(h.id) && !leagueOwnedHorseIds.has(h.id))
-    .filter((h) => h.name.toLowerCase().includes(search))
-    .sort((a, b) => a.name.localeCompare(b.name))
-    .slice(0, 200);
+  const eligible = state.horses.filter((h) => h.status === 'active' && !currentIds.has(h.id) && !leagueOwnedHorseIds.has(h.id));
+
+  // With no search text, default to the same curated starred pool the draft
+  // room's nomination list uses — an alphabetically-sorted, 200-row-capped
+  // slice of ~9,000 horses would otherwise only ever show names starting
+  // with "A". Typing still searches the full eligible pool.
+  const pool = search
+    ? eligible.filter((h) => h.name.toLowerCase().includes(search)).sort((a, b) => a.name.localeCompare(b.name)).slice(0, 200)
+    : eligible.filter((h) => h.is_starred).sort((a, b) => a.name.localeCompare(b.name));
 
   list.innerHTML = pool.map((h) => {
     const slot = choiceIds.indexOf(h.id);
@@ -327,7 +331,9 @@ function renderReplacementList(canEdit) {
       <div class="spr-info"><div class="spr-name">${escapeHtml(h.name)}</div><div class="spr-meta">${escapeHtml(h.trainer || '')}</div>${futuresChipsHTML(h.id)}</div>
       ${slot !== -1 ? `<span class="in-badge">P${slot + 1}</span>` : ''}
     </div>`;
-  }).join('') || '<div class="transfer-empty">No horses match</div>';
+  }).join('') || (search
+    ? '<div class="transfer-empty">No horses match</div>'
+    : '<div class="transfer-empty">No horses are starred yet — search above, or ask your admin to star some in Data Import so they show up here by default.</div>');
 }
 
 function renderSubmitStrip() {
