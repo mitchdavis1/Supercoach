@@ -230,7 +230,7 @@ export async function resetLeagueDraft() {
   const input = document.getElementById('resetLeagueCodeInput');
   const code = input?.value?.trim();
   if (!code) return;
-  if (!confirm(`Reset the draft for league "${code.toUpperCase()}"? This deletes all drafted horses, stables, and transfers for that league so it can be re-drafted. This cannot be undone.`)) return;
+  if (!confirm(`Reset the draft for league "${code.toUpperCase()}"? This deletes all drafted horses, stables, transfers, and waiver order/history for that league so it can be re-drafted. This cannot be undone.`)) return;
 
   const { error } = await supabase.rpc('reset_league_draft', { p_league_code: code });
   if (error) {
