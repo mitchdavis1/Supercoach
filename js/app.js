@@ -6,7 +6,7 @@ import { loadStable, renderMyStablePage } from './stable.js';
 import { selectTransferOut, selectChoice, filterReplacements, submitWaiverRequest, loadTransferContext, renderTransferPage, startTransferPolling, stopTransferPolling } from './transfers.js';
 import { loadPrizemoney, loadFuturesOdds, renderLeaderboard, setLbRound } from './scoring.js';
 import { renderInPlay } from './inplay.js';
-import { handleHorsePoolFile, handleAcceptancesFile, handleResultsFile, handleStarredHorsesFile, handleFuturesOddsFile, resetImportedData, resetLeagueDraft, renderAdminStats, filterHorseCurationList, toggleHorseStar, forceConfirmEmail, sendPasswordReset } from './admin-import.js';
+import { handleHorsePoolFile, handleAcceptancesFile, handleResultsFile, handleStarredHorsesFile, handleFuturesOddsFile, resetImportedData, resetPrizemoneyTracking, resetLeagueDraft, renderAdminStats, filterHorseCurationList, toggleHorseStar, forceConfirmEmail, sendPasswordReset } from './admin-import.js';
 
 const PAGES = ['myteam', 'draft', 'transfer', 'leaderboard', 'rules', 'joinleague', 'inplay', 'dataimport'];
 let activePage = 'draft';
@@ -40,6 +40,7 @@ window.handleStarredHorsesFile = handleStarredHorsesFile;
 window.handleFuturesOddsFile = handleFuturesOddsFile;
 window.resetImportedData = resetImportedData;
 window.resetLeagueDraft = resetLeagueDraft;
+window.resetPrizemoneyTracking = resetPrizemoneyTracking;
 window.filterHorseCurationList = filterHorseCurationList;
 window.forceConfirmEmail = forceConfirmEmail;
 window.sendPasswordReset = sendPasswordReset;

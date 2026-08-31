@@ -226,6 +226,17 @@ export async function resetImportedData() {
   await refreshAfterImport();
 }
 
+export async function resetPrizemoneyTracking() {
+  if (!confirm('Reset ALL prizemoney tracking? This clears every recorded prizemoney total, and resets every stable\'s earned-since-drafted baseline and every league\'s banked earnings back to zero — across every league, not just one. Use this before re-uploading a corrected cumulative file if prior uploads were test data. This cannot be undone.')) return;
+  const { error } = await supabase.rpc('reset_prizemoney_tracking');
+  if (error) {
+    renderResult('resetPrizemoneyResult', error.message, true);
+    return;
+  }
+  renderResult('resetPrizemoneyResult', 'Prizemoney totals, baselines, and banked earnings have all been reset to zero. Upload the corrected cumulative file now.', false);
+  await refreshAfterImport();
+}
+
 export async function resetLeagueDraft() {
   const input = document.getElementById('resetLeagueCodeInput');
   const code = input?.value?.trim();

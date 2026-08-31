@@ -391,6 +391,10 @@
           <button class="admin-import-btn" onclick="handleResultsFile()">Import Results</button>
         </div>
         <div id="resultsImportResult"></div>
+
+        <div class="admin-card-sub" style="margin-top:16px;"><strong>Reset prizemoney tracking</strong> — use this if prior prizemoney uploads were test/placeholder data. It clears every recorded total <em>and</em> resets every stable's earned-since-drafted baseline and every league's banked earnings to zero (across every league), so the next correct cumulative file starts genuine scoring from a clean slate. Resetting totals alone would leave stale baselines behind and just recreate the same mismatch.</div>
+        <span class="admin-reset-link" onclick="resetPrizemoneyTracking()">↺ Reset prizemoney tracking</span>
+        <div id="resetPrizemoneyResult"></div>
       </div>
 
       <div class="admin-card">
