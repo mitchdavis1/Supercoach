@@ -30,9 +30,16 @@ export function horseName(id) {
 // server-side at draft/transfer time (see process_league_waivers_if_due());
 // earnings banked from horses traded away live on league_members.banked_earnings,
 // separately from any single horse.
+//
+// Floored at 0: a horse's cumulative prizemoney should only ever go up in
+// reality, but an admin re-importing a corrected (lower) total for a horse —
+// or, in testing, uploading two files with inconsistent numbers for the same
+// horse — would otherwise make it look like the horse "un-won" money while
+// held, dragging a manager's score negative for something that never
+// happened. Zero is the honest floor: "earned nothing new," not "lost."
 export function earnedForStableRow(s) {
   const raw = state.prizemoneyByHorse.get(s.horse_id) || 0;
-  return raw - (Number(s.baseline_prizemoney) || 0);
+  return Math.max(0, raw - (Number(s.baseline_prizemoney) || 0));
 }
 
 export function fmtMoney(n) {

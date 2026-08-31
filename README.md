@@ -52,7 +52,7 @@ legacy/                  The original prototype + migration brief, for reference
 
 1. Create a project at [supabase.com](https://supabase.com).
 2. In the SQL Editor, run each file in `supabase/migrations/` **in order**
-   (0001 → 0026, skipping 0005 — removed along with the Captain/VC feature).
+   (0001 → 0027, skipping 0005 — removed along with the Captain/VC feature).
    They're plain SQL, so `supabase db push` via the CLI works
    too if you prefer.
 3. In Authentication → Providers, email/password should already be enabled
