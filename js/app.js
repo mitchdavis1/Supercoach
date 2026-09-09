@@ -5,7 +5,7 @@ import { loadHorses, loadDraftState, loadDraftPicks, subscribeToDraft, onDraftUp
 import { loadStable, renderMyStablePage } from './stable.js';
 import { selectTransferOut, selectChoice, filterReplacements, submitWaiverRequest, loadTransferContext, renderTransferPage, startTransferPolling, stopTransferPolling } from './transfers.js';
 import { loadPrizemoney, loadFuturesOdds, renderLeaderboard, setLbRound } from './scoring.js';
-import { renderInPlay } from './inplay.js';
+import { renderInPlay, switchLeagueTab } from './inplay.js';
 import { handleHorsePoolFile, handleAcceptancesFile, handleResultsFile, handleStarredHorsesFile, handleFuturesOddsFile, resetImportedData, resetPrizemoneyTracking, resetLeagueDraft, renderAdminStats, filterHorseCurationList, toggleHorseStar, forceConfirmEmail, sendPasswordReset } from './admin-import.js';
 
 const PAGES = ['myteam', 'draft', 'transfer', 'leaderboard', 'rules', 'joinleague', 'inplay', 'dataimport'];
@@ -33,6 +33,7 @@ window.selectChoice = selectChoice;
 window.filterReplacements = filterReplacements;
 window.submitWaiverRequest = submitWaiverRequest;
 window.setLbRound = setLbRound;
+window.switchLeagueTab = switchLeagueTab;
 window.handleHorsePoolFile = handleHorsePoolFile;
 window.handleAcceptancesFile = handleAcceptancesFile;
 window.handleResultsFile = handleResultsFile;

@@ -40,7 +40,7 @@ js/
   transfers.js              Weekly transfer flow
   scoring.js                 Leaderboard (100% prizemoney earned since acquiring each horse)
   admin-import.js             Horse pool / acceptances / prizemoney import
-  inplay.js                    League Acceptances view
+  inplay.js                    My League view (acceptances + all teams' rosters)
   app.js                        Entry point: page router, wires everything
 supabase/migrations/    Ordered SQL migrations — schema, RLS, RPCs
 legacy/                  The original prototype + migration brief, for reference
@@ -52,7 +52,7 @@ legacy/                  The original prototype + migration brief, for reference
 
 1. Create a project at [supabase.com](https://supabase.com).
 2. In the SQL Editor, run each file in `supabase/migrations/` **in order**
-   (0001 → 0029, skipping 0005 — removed along with the Captain/VC feature).
+   (0001 → 0030, skipping 0005 — removed along with the Captain/VC feature).
    They're plain SQL, so `supabase db push` via the CLI works
    too if you prefer.
 3. In Authentication → Providers, email/password should already be enabled
@@ -170,6 +170,14 @@ It's a static site — no build step. Any of these work:
   `submit_waiver_request` and from a `check_league_waivers()` poll on the
   Stable Transfer page — so the same "nobody has a tab open" caveat above
   applies here too.
+- **"No longer rostered" history only covers trades processed after this
+  feature shipped.** `stable_history` is written at the same moment a
+  waiver trade processes, itemizing what the traded-away horse contributed
+  — but a handful of horses traded before this table existed have no
+  baseline left to reconstruct that from (it was deleted along with their
+  stable row), so they simply won't appear in My League's team view. Not
+  fixable retroactively, and not worth worrying about now that real season
+  data has started.
 - **The SQL migrations haven't been run against a live project yet** — they're
   written carefully against the brief and the extracted prototype logic,
   but give the draft flow (start → nominate → bid → timeout → award →

@@ -420,6 +420,32 @@ body { background: #FFF5FA; color: #1A1F5E; min-height: 100vh; font-family: 'Int
 .league-acc-you-badge { background: #E8007D; color: #fff; font-size: 8px; font-weight: 900; padding: 1px 6px; border-radius: 3px; text-transform: uppercase; letter-spacing: 0.5px; margin-left: 4px; }
 .league-acc-empty { padding: 20px; text-align: center; font-size: 12px; color: #c070a0; }
 
+/* My League — Acceptances/Teams toggle */
+.league-tab-toggle { display: flex; gap: 8px; margin: 18px 0 16px; }
+.league-tab-btn {
+  flex: 1; background: #fff; border: 1.5px solid #FFD6EC; border-radius: 10px; padding: 11px 16px;
+  font-size: 12px; font-weight: 800; color: #7080b0; cursor: pointer; font-family: inherit; transition: all 0.15s;
+}
+.league-tab-btn:hover { border-color: #E8007D; color: #1A1F5E; }
+.league-tab-btn.active { background: #1A1F5E; border-color: #1A1F5E; color: #FFD6EC; }
+
+/* My League — Teams view */
+.league-teams-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 800px) { .league-teams-grid { grid-template-columns: 1fr; } }
+.league-team-card { background: #fff; border: 1.5px solid #FFD6EC; border-radius: 12px; overflow: hidden; }
+.league-team-card.mine { border-color: #E8007D; border-width: 2px; }
+.league-team-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: #FFF5FA; border-bottom: 1.5px solid #FFD6EC; }
+.league-team-name { font-size: 13px; font-weight: 800; color: #1A1F5E; }
+.league-team-subname { font-size: 10px; color: #9080b0; margin-top: 1px; }
+.league-team-score { font-family: 'Anton', Impact, sans-serif; font-size: 18px; color: #E8007D; flex-shrink: 0; }
+.league-team-roster { padding: 4px 0; }
+.league-team-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 16px; font-size: 12px; color: #1A1F5E; }
+.league-team-row.past { color: #9080b0; }
+.league-team-earned { font-weight: 800; color: #2a9a50; flex-shrink: 0; }
+.league-team-row.past .league-team-earned { color: #9080b0; }
+.league-team-week { font-size: 9px; color: #b0a0c0; margin-left: 4px; }
+.league-team-past-header { font-size: 9px; text-transform: uppercase; letter-spacing: 1px; font-weight: 800; color: #9080b0; padding: 10px 16px 2px; border-top: 1px solid #FFF0F8; }
+
 /* ── TOP NAV ── */
 .top-nav {
   background: #fff;
