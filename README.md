@@ -52,7 +52,7 @@ legacy/                  The original prototype + migration brief, for reference
 
 1. Create a project at [supabase.com](https://supabase.com).
 2. In the SQL Editor, run each file in `supabase/migrations/` **in order**
-   (0001 → 0030, skipping 0005 — removed along with the Captain/VC feature).
+   (0001 → 0031, skipping 0005 — removed along with the Captain/VC feature).
    They're plain SQL, so `supabase db push` via the CLI works
    too if you prefer.
 3. In Authentication → Providers, email/password should already be enabled
@@ -157,7 +157,7 @@ It's a static site — no build step. Any of these work:
   this fully unattended if that matters for your use case.
 - **Weekly transfers are waiver-based, not first-come-first-served.**
   Transferring a horse out means picking up to 3 incoming horses in
-  priority order; nothing happens until the window closes (Friday 5pm
+  priority order; nothing happens until the window closes (Saturday 10am
   AEDT). At that point every league with a completed draft works through
   its pending requests in waiver order — each manager gets their
   highest-priority pick that's still unclaimed, or their transfer is
