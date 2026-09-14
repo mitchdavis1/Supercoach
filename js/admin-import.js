@@ -253,8 +253,8 @@ export async function resetLeagueDraft() {
 
 async function refreshAfterImport() {
   const { loadHorses } = await import('./draft.js');
-  const { loadFuturesOdds } = await import('./scoring.js');
-  await Promise.all([loadHorses(), loadFuturesOdds()]);
+  const { loadFuturesOdds, loadPrizemoney } = await import('./scoring.js');
+  await Promise.all([loadHorses(), loadFuturesOdds(), loadPrizemoney()]);
   await renderAdminStats();
 }
 
