@@ -13,22 +13,41 @@ import { state, getActiveLeague, fmtMoney, earnedForStableRow } from './state.js
 // that's real).
 
 export async function loadPrizemoney() {
-  const { data, error } = await supabase.from('prizemoney').select('horse_id, total_prizemoney');
-  if (error) {
-    console.error('Could not load prizemoney', error);
-    return;
+  // Same cap as horses (see loadHorses() in draft.js) — a single request
+  // maxes out at 1000 rows. The prizemoney table crossed that threshold
+  // partway through the season, which silently dropped every horse past
+  // row 1000 from scoring with no error, no matter how correct their
+  // imported total was. Page through it all.
+  const pageSize = 1000;
+  const all = [];
+  for (let from = 0; ; from += pageSize) {
+    const { data, error } = await supabase.from('prizemoney').select('horse_id, total_prizemoney').range(from, from + pageSize - 1);
+    if (error) {
+      console.error('Could not load prizemoney', error);
+      break;
+    }
+    all.push(...data);
+    if (data.length < pageSize) break;
   }
-  state.prizemoneyByHorse = new Map((data || []).map((p) => [p.horse_id, Number(p.total_prizemoney)]));
+  state.prizemoneyByHorse = new Map(all.map((p) => [p.horse_id, Number(p.total_prizemoney)]));
 }
 
 export async function loadFuturesOdds() {
-  const { data, error } = await supabase.from('futures_odds').select('horse_id, race_name, odds');
-  if (error) {
-    console.error('Could not load futures odds', error);
-    return;
+  // Same 1000-row cap as above — futures_odds is nowhere near it yet, but
+  // paginate now rather than waiting to rediscover this a third time.
+  const pageSize = 1000;
+  const all = [];
+  for (let from = 0; ; from += pageSize) {
+    const { data, error } = await supabase.from('futures_odds').select('horse_id, race_name, odds').range(from, from + pageSize - 1);
+    if (error) {
+      console.error('Could not load futures odds', error);
+      break;
+    }
+    all.push(...data);
+    if (data.length < pageSize) break;
   }
   const byHorse = new Map();
-  (data || []).forEach((f) => {
+  all.forEach((f) => {
     if (!byHorse.has(f.horse_id)) byHorse.set(f.horse_id, []);
     byHorse.get(f.horse_id).push({ race_name: f.race_name, odds: f.odds != null ? Number(f.odds) : null });
   });
