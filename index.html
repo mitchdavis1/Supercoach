@@ -371,6 +371,13 @@
           <button class="admin-import-btn" onclick="handleHorsePoolFile()">Import Horse Pool</button>
         </div>
         <div id="horsePoolImportResult"></div>
+
+        <div class="admin-card-sub" style="margin-top:16px;"><strong>Add a single horse</strong> — for the odd late addition between full file uploads, without re-uploading the whole pool. Same additive rule applies: if the name already matches a horse in your pool, nothing changes.</div>
+        <div class="admin-file-row">
+          <input type="text" id="addHorseNameInput" class="join-input" placeholder="Horse name" style="max-width:280px;" onkeydown="if(event.key==='Enter') handleAddSingleHorse()" />
+          <button class="admin-import-btn" onclick="handleAddSingleHorse()">Add Horse</button>
+        </div>
+        <div id="addHorseResult"></div>
       </div>
 
       <div class="admin-card">

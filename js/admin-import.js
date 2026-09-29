@@ -81,6 +81,27 @@ export async function handleHorsePoolFile() {
   }
 }
 
+export async function handleAddSingleHorse() {
+  const input = document.getElementById('addHorseNameInput');
+  const name = input?.value?.trim();
+  if (!name) return;
+
+  try {
+    const { data, error } = await supabase.rpc('import_horse_pool', { p_rows: [{ name }] });
+    if (error) throw error.message;
+
+    if (data.created > 0) {
+      renderResult('addHorseResult', `<span class="admin-result-stat">Added</span> "${escapeHtml(name)}" to the horse pool.`, false);
+      input.value = '';
+    } else {
+      renderResult('addHorseResult', `A horse matching "${escapeHtml(name)}" is already in your pool — nothing was added.`, false);
+    }
+    await refreshAfterImport();
+  } catch (err) {
+    renderResult('addHorseResult', String(err), true);
+  }
+}
+
 export async function handleAcceptancesFile() {
   const input = document.getElementById('acceptancesFileInput');
   const file = input?.files?.[0];
