@@ -1,5 +1,6 @@
 import { supabase } from './supabaseClient.js';
 import { state, getActiveLeague, fmtMoney, earnedForStableRow } from './state.js';
+import { loadLeagueMembers } from './league.js';
 
 // Scoring: a horse scores 100% of what it's earned since joining this
 // stable (see earnedForStableRow in state.js — not its raw cumulative
@@ -72,6 +73,14 @@ export async function renderLeaderboard() {
     rowsContainer.innerHTML = '<div class="league-empty-state" style="padding:40px;">Join a league to see a leaderboard.</div>';
     return;
   }
+
+  // banked_earnings only reaches state.members via a realtime subscription
+  // (see subscribeToMembership() in league.js) — fine while the tab stays
+  // connected, but a waiver run processing while the tab was backgrounded
+  // or briefly disconnected leaves it stale with no visible error. Refetch
+  // it fresh here too, same as stables below, so the leaderboard is always
+  // correct without requiring a manual reload.
+  await loadLeagueMembers(league.id);
 
   const { data: allStables, error } = await supabase.from('stables').select('*').eq('league_id', league.id);
   if (error) {
