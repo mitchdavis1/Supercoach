@@ -82,6 +82,14 @@ export async function renderLeaderboard() {
   // correct without requiring a manual reload.
   await loadLeagueMembers(league.id);
 
+  // Same staleness risk for prizemoneyByHorse: it's only loaded once at
+  // sign-in and after an admin runs an import (see refreshAfterImport() in
+  // admin-import.js). A tab left open across a prizemoney update — whether
+  // a file upload or an admin correcting one horse directly — would keep
+  // showing the old figures with no error. Refetch it fresh on every
+  // leaderboard render too.
+  await loadPrizemoney();
+
   const { data: allStables, error } = await supabase.from('stables').select('*').eq('league_id', league.id);
   if (error) {
     console.error('Could not load league stables', error);
