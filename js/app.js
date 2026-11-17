@@ -86,7 +86,7 @@ async function renderActivePage() {
   if (activePage === 'draft') renderDraftPage();
   if (activePage === 'dataimport') await renderAdminStats();
   if (activePage === 'joinleague') renderLeaguePage();
-  if (activePage === 'myteam') renderMyStablePage();
+  if (activePage === 'myteam') await renderMyStablePage();
 }
 
 let signedInUserId = null;

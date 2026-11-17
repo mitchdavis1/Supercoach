@@ -61,6 +61,88 @@ function scoreForStable(stableRows, bankedEarnings) {
   return fromHorses + (Number(bankedEarnings) || 0);
 }
 
+// Shared by every events-model reader (the leaderboard below, and My
+// League's team/history view in inplay.js) — the one place that
+// implements "sum of prizemoney_events for this ownership period, clipped
+// to the league's game window." Returns every ownership_periods row for
+// the league (past AND current — a manager's full-season total needs
+// both), each with its `earned` amount attached. No separate
+// banked_earnings concept exists for 'events' leagues: since periods are
+// closed out with an end_date rather than deleted, summing every period
+// a manager has ever held already gives the correct full-season figure.
+export async function loadEventsOwnershipPeriods(leagueId) {
+  const { data: periods, error } = await supabase
+    .from('ownership_periods')
+    .select('id, user_id, horse_id, start_date, end_date')
+    .eq('league_id', leagueId);
+  if (error) {
+    console.error('Could not load ownership periods', error);
+    return [];
+  }
+
+  const { data: windowRow } = await supabase
+    .from('league_game_window')
+    .select('window_start, window_end')
+    .eq('league_id', leagueId)
+    .maybeSingle();
+  const windowStart = windowRow?.window_start ?? null;
+  const windowEnd = windowRow?.window_end ?? null;
+  const inWindow = (d) => (!windowStart || d >= windowStart) && (!windowEnd || d <= windowEnd);
+
+  const horseIds = [...new Set((periods || []).map((p) => p.horse_id))];
+  const events = await fetchPrizemoneyEventsForHorses(horseIds);
+  const eventsByHorse = new Map();
+  events.forEach((e) => {
+    if (!eventsByHorse.has(e.horse_id)) eventsByHorse.set(e.horse_id, []);
+    eventsByHorse.get(e.horse_id).push(e);
+  });
+
+  return (periods || []).map((p) => {
+    const earned = (eventsByHorse.get(p.horse_id) || [])
+      .filter((e) => e.race_date >= p.start_date && (!p.end_date || e.race_date < p.end_date) && inWindow(e.race_date))
+      .reduce((total, e) => total + Number(e.stake), 0);
+    return { ...p, earned };
+  });
+}
+
+// Paginated the same way as loadPrizemoney() (Supabase caps a single
+// request at 1000 rows), and chunked into batches of 200 horse_ids per
+// request since a huge .in() filter list doesn't scale forever either.
+async function fetchPrizemoneyEventsForHorses(horseIds) {
+  if (horseIds.length === 0) return [];
+  const all = [];
+  const chunkSize = 200;
+  for (let i = 0; i < horseIds.length; i += chunkSize) {
+    const chunk = horseIds.slice(i, i + chunkSize);
+    const pageSize = 1000;
+    for (let from = 0; ; from += pageSize) {
+      const { data, error } = await supabase
+        .from('prizemoney_events')
+        .select('horse_id, race_date, stake')
+        .in('horse_id', chunk)
+        .range(from, from + pageSize - 1);
+      if (error) {
+        console.error('Could not load prizemoney events', error);
+        break;
+      }
+      all.push(...data);
+      if (data.length < pageSize) break;
+    }
+  }
+  return all;
+}
+
+// Populates state.eventsEarnedByHorse for the active league's CURRENTLY
+// held horses only (open ownership_periods rows) — the per-horse display
+// used by stable.js and inplay.js, mirroring how prizemoneyByHorse backs
+// the legacy earnedForStableRow().
+export async function loadEventsEarnings(leagueId) {
+  const periods = await loadEventsOwnershipPeriods(leagueId);
+  state.eventsEarnedByHorse = new Map(
+    periods.filter((p) => p.end_date == null).map((p) => [p.horse_id, p.earned])
+  );
+}
+
 export async function renderLeaderboard() {
   const league = getActiveLeague();
   const heroRank = document.getElementById('lbHeroRank');
@@ -82,36 +164,10 @@ export async function renderLeaderboard() {
   // correct without requiring a manual reload.
   await loadLeagueMembers(league.id);
 
-  // Same staleness risk for prizemoneyByHorse: it's only loaded once at
-  // sign-in and after an admin runs an import (see refreshAfterImport() in
-  // admin-import.js). A tab left open across a prizemoney update — whether
-  // a file upload or an admin correcting one horse directly — would keep
-  // showing the old figures with no error. Refetch it fresh on every
-  // leaderboard render too.
-  await loadPrizemoney();
-
-  const { data: allStables, error } = await supabase.from('stables').select('*').eq('league_id', league.id);
-  if (error) {
-    console.error('Could not load league stables', error);
-    return;
-  }
-
-  const byUser = new Map();
-  (allStables || []).forEach((s) => {
-    if (!byUser.has(s.user_id)) byUser.set(s.user_id, []);
-    byUser.get(s.user_id).push(s);
-  });
-
-  const rows = state.members.map((m) => {
-    const stable = byUser.get(m.user_id) || [];
-    return {
-      userId: m.user_id,
-      name: m.profiles?.display_name || m.profiles?.username || 'Manager',
-      teamName: m.team_name,
-      score: scoreForStable(stable, m.banked_earnings),
-      stableCount: stable.length,
-    };
-  }).sort((a, b) => b.score - a.score);
+  const rows = league.scoring_model === 'events'
+    ? await computeEventsLeaderboardRows(league)
+    : await computeLegacyLeaderboardRows(league);
+  rows.sort((a, b) => b.score - a.score);
 
   const me = rows.find((r) => r.userId === state.session.user.id);
   const myRank = rows.findIndex((r) => r.userId === state.session.user.id) + 1;
@@ -136,6 +192,58 @@ export async function renderLeaderboard() {
         <div class="lb-change eq">—</div>
       </div>`;
   }).join('') || '<div class="league-empty-state" style="padding:40px;">No members yet</div>';
+}
+
+async function computeLegacyLeaderboardRows(league) {
+  // Same staleness risk as banked_earnings above: prizemoneyByHorse is
+  // only loaded once at sign-in and after an admin runs an import (see
+  // refreshAfterImport() in admin-import.js). Refetch it fresh here too.
+  await loadPrizemoney();
+
+  const { data: allStables, error } = await supabase.from('stables').select('*').eq('league_id', league.id);
+  if (error) {
+    console.error('Could not load league stables', error);
+    return [];
+  }
+
+  const byUser = new Map();
+  (allStables || []).forEach((s) => {
+    if (!byUser.has(s.user_id)) byUser.set(s.user_id, []);
+    byUser.get(s.user_id).push(s);
+  });
+
+  return state.members.map((m) => {
+    const stable = byUser.get(m.user_id) || [];
+    return {
+      userId: m.user_id,
+      name: m.profiles?.display_name || m.profiles?.username || 'Manager',
+      teamName: m.team_name,
+      score: scoreForStable(stable, m.banked_earnings),
+      stableCount: stable.length,
+    };
+  });
+}
+
+async function computeEventsLeaderboardRows(league) {
+  const [periods, { data: allStables, error }] = await Promise.all([
+    loadEventsOwnershipPeriods(league.id),
+    supabase.from('stables').select('user_id').eq('league_id', league.id),
+  ]);
+  if (error) console.error('Could not load league stables', error);
+
+  const stableCounts = new Map();
+  (allStables || []).forEach((s) => stableCounts.set(s.user_id, (stableCounts.get(s.user_id) || 0) + 1));
+
+  const scoreByUser = new Map();
+  periods.forEach((p) => scoreByUser.set(p.user_id, (scoreByUser.get(p.user_id) || 0) + p.earned));
+
+  return state.members.map((m) => ({
+    userId: m.user_id,
+    name: m.profiles?.display_name || m.profiles?.username || 'Manager',
+    teamName: m.team_name,
+    score: scoreByUser.get(m.user_id) || 0,
+    stableCount: stableCounts.get(m.user_id) || 0,
+  }));
 }
 
 export function setLbRound() {

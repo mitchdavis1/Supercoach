@@ -1,5 +1,6 @@
 import { supabase } from './supabaseClient.js';
-import { state, getActiveLeague, fmtMoney, earnedForStableRow } from './state.js';
+import { state, getActiveLeague, fmtMoney, getEarnedForStableRow } from './state.js';
+import { loadEventsOwnershipPeriods } from './scoring.js';
 
 let activeTab = 'acceptances'; // 'acceptances' | 'teams'
 
@@ -24,15 +25,18 @@ export async function renderInPlay() {
   }
 
   const myId = state.session.user.id;
-  const [{ data: acceptances }, { data: leagueStables }, { data: history }] = await Promise.all([
+  const isEvents = league.scoring_model === 'events';
+  const [{ data: acceptances }, { data: leagueStables }, { data: history }, eventsPeriods] = await Promise.all([
     supabase.from('acceptances').select('*'),
     supabase.from('stables').select('*').eq('league_id', league.id),
-    supabase.from('stable_history').select('*').eq('league_id', league.id),
+    isEvents ? Promise.resolve({ data: [] }) : supabase.from('stable_history').select('*').eq('league_id', league.id),
+    isEvents ? loadEventsOwnershipPeriods(league.id) : Promise.resolve([]),
   ]);
 
   const memberById = new Map(state.members.map((m) => [m.user_id, m]));
-  const bankedEarnings = Number(memberById.get(myId)?.banked_earnings) || 0;
-  const totalScore = state.stable.reduce((sum, s) => sum + earnedForStableRow(s), bankedEarnings);
+  const totalScore = isEvents
+    ? eventsPeriods.filter((p) => p.user_id === myId).reduce((sum, p) => sum + p.earned, 0)
+    : state.stable.reduce((sum, s) => sum + getEarnedForStableRow(s, league), Number(memberById.get(myId)?.banked_earnings) || 0);
 
   container.innerHTML = `
     <div class="inplay-hero">
@@ -61,7 +65,7 @@ export async function renderInPlay() {
 
   if (activeTab === 'teams') {
     if (sub) sub.textContent = `${state.members.length} teams in this league`;
-    if (body) body.innerHTML = renderTeamsTab(league, leagueStables || [], history || []);
+    if (body) body.innerHTML = renderTeamsTab(league, leagueStables || [], history || [], eventsPeriods);
     return;
   }
 
@@ -128,23 +132,30 @@ export async function renderInPlay() {
   }
 }
 
-function renderTeamsTab(league, leagueStables, history) {
+function renderTeamsTab(league, leagueStables, history, eventsPeriods) {
   const myId = state.session.user.id;
-  const memberById = new Map(state.members.map((m) => [m.user_id, m]));
+  const isEvents = league.scoring_model === 'events';
 
   const teams = state.members.map((m) => {
     const roster = leagueStables
       .filter((s) => s.user_id === m.user_id)
-      .map((s) => ({ s, horse: state.horsesById.get(s.horse_id), earned: earnedForStableRow(s) }))
+      .map((s) => ({ s, horse: state.horsesById.get(s.horse_id), earned: getEarnedForStableRow(s, league) }))
       .sort((a, b) => b.earned - a.earned);
 
-    const past = history
-      .filter((h) => h.user_id === m.user_id)
-      .map((h) => ({ ...h, horse: state.horsesById.get(h.horse_id) }))
-      .sort((a, b) => new Date(b.left_at) - new Date(a.left_at));
-
-    const bankedEarnings = Number(m.banked_earnings) || 0;
-    const total = roster.reduce((sum, r) => sum + r.earned, bankedEarnings);
+    let past, total;
+    if (isEvents) {
+      past = eventsPeriods
+        .filter((p) => p.user_id === m.user_id && p.end_date != null)
+        .map((p) => ({ horse: state.horsesById.get(p.horse_id), contributed_prizemoney: p.earned, week_number: null, end_date: p.end_date }))
+        .sort((a, b) => (b.end_date || '').localeCompare(a.end_date || ''));
+      total = eventsPeriods.filter((p) => p.user_id === m.user_id).reduce((sum, p) => sum + p.earned, 0);
+    } else {
+      past = history
+        .filter((h) => h.user_id === m.user_id)
+        .map((h) => ({ ...h, horse: state.horsesById.get(h.horse_id) }))
+        .sort((a, b) => new Date(b.left_at) - new Date(a.left_at));
+      total = roster.reduce((sum, r) => sum + r.earned, Number(m.banked_earnings) || 0);
+    }
 
     return { m, roster, past, total, isMe: m.user_id === myId };
   }).sort((a, b) => (b.isMe - a.isMe) || b.total - a.total);
@@ -170,7 +181,7 @@ function renderTeamsTab(league, leagueStables, history) {
         <div class="league-team-roster past">
           ${past.map((p) => `
             <div class="league-team-row past">
-              <span>${p.horse?.emoji || '🐎'} ${escapeHtml(p.horse?.name || 'Horse')} <span class="league-team-week">Wk ${p.week_number}</span></span>
+              <span>${p.horse?.emoji || '🐎'} ${escapeHtml(p.horse?.name || 'Horse')} <span class="league-team-week">${p.week_number != null ? 'Wk ' + p.week_number : fmtAccDate(p.end_date)}</span></span>
               <span class="league-team-earned">${fmtMoney(p.contributed_prizemoney)}</span>
             </div>`).join('')}
         </div>` : ''}

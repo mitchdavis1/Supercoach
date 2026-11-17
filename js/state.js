@@ -16,6 +16,7 @@ export const state = {
   acceptances: [],
   prizemoneyByHorse: new Map(),
   futuresByHorse: new Map(), // horse_id -> [{race_name, odds}], sorted shortest-odds first
+  eventsEarnedByHorse: new Map(), // horse_id -> earned-in-window since its CURRENT open ownership_periods row started (scoring_model = 'events' leagues only — see loadEventsOwnershipPeriods() in scoring.js)
   realtimeChannel: null,
 };
 
@@ -40,6 +41,24 @@ export function horseName(id) {
 export function earnedForStableRow(s) {
   const raw = state.prizemoneyByHorse.get(s.horse_id) || 0;
   return Math.max(0, raw - (Number(s.baseline_prizemoney) || 0));
+}
+
+// Events-model equivalent of earnedForStableRow, for a league on
+// scoring_model = 'events' (NZ season onward). There's no baseline/banking
+// here — eventsEarnedByHorse is already the correct in-window sum for
+// whoever currently holds the horse, computed from dated
+// prizemoney_events against that horse's open ownership_periods row (see
+// loadEventsOwnershipPeriods() in scoring.js). A horse can only be
+// actively held by one manager per league at a time, so horse_id alone is
+// an unambiguous key here.
+export function earnedForStableRowEvents(s) {
+  return Number(state.eventsEarnedByHorse.get(s.horse_id)) || 0;
+}
+
+// Dispatches to the right earned-calculation for the active league's
+// scoring_model, so callers don't each need their own branch.
+export function getEarnedForStableRow(s, league) {
+  return league?.scoring_model === 'events' ? earnedForStableRowEvents(s) : earnedForStableRow(s);
 }
 
 export function fmtMoney(n) {

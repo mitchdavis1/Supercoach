@@ -1,5 +1,6 @@
 import { supabase } from './supabaseClient.js';
-import { state, getActiveLeague, earnedForStableRow } from './state.js';
+import { state, getActiveLeague, getEarnedForStableRow } from './state.js';
+import { loadEventsEarnings } from './scoring.js';
 
 export async function loadStable(leagueId) {
   if (!leagueId || !state.session) {
@@ -18,7 +19,7 @@ export async function loadStable(leagueId) {
   state.stable = data || [];
 }
 
-export function renderMyStablePage() {
+export async function renderMyStablePage() {
   const container = document.getElementById('myteamContainer');
   const budgetDisplay = document.getElementById('budgetDisplay');
   const budgetBar = document.getElementById('budgetBar');
@@ -43,9 +44,11 @@ export function renderMyStablePage() {
     return;
   }
 
+  if (league.scoring_model === 'events') await loadEventsEarnings(league.id);
+
   const rows = state.stable.map((s) => {
     const horse = state.horsesById.get(s.horse_id);
-    const earned = earnedForStableRow(s);
+    const earned = getEarnedForStableRow(s, league);
     return `
       <div class="team-slot filled">
         <div class="slot-avatar horse">${horse?.emoji || '🐎'}</div>
