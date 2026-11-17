@@ -272,6 +272,47 @@ export async function resetLeagueDraft() {
   renderResult('resetLeagueResult', `League "${code.toUpperCase()}" draft has been reset — ready to start again.`, false);
 }
 
+export async function setLeagueScoringModel() {
+  const codeInput = document.getElementById('nzLeagueCodeInput');
+  const modelSelect = document.getElementById('nzScoringModelSelect');
+  const startInput = document.getElementById('nzWindowStartInput');
+  const endInput = document.getElementById('nzWindowEndInput');
+  const code = codeInput?.value?.trim();
+  const model = modelSelect?.value;
+  if (!code || !model) return;
+
+  try {
+    const { data: league, error: findErr } = await supabase
+      .from('leagues')
+      .select('id, name')
+      .eq('code', code.toUpperCase())
+      .single();
+    if (findErr || !league) throw 'No league found with that code';
+
+    if (model === 'events' && (!startInput?.value || !endInput?.value)) {
+      throw 'An events league needs both a window start and end date';
+    }
+
+    const { error } = await supabase.rpc('admin_set_league_scoring_model', {
+      p_league_id: league.id,
+      p_scoring_model: model,
+      p_window_start: model === 'events' ? startInput.value : null,
+      p_window_end: model === 'events' ? endInput.value : null,
+    });
+    if (error) throw error.message;
+
+    renderResult(
+      'nzLeagueResult',
+      model === 'events'
+        ? `<span class="admin-result-stat">${escapeHtml(league.name)} is now an events league</span> scoring ${startInput.value} → ${endInput.value}.`
+        : `<span class="admin-result-stat">${escapeHtml(league.name)} is now a legacy league</span>.`,
+      false
+    );
+  } catch (err) {
+    renderResult('nzLeagueResult', String(err), true);
+  }
+}
+
 async function refreshAfterImport() {
   const { loadHorses } = await import('./draft.js');
   const { loadFuturesOdds, loadPrizemoney } = await import('./scoring.js');

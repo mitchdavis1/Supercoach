@@ -23,8 +23,11 @@ export async function loadTransferContext(syncSelection = true) {
     console.error('check_league_waivers failed', e);
   }
 
-  const [weeksRes, ownedRes, logRes, orderRes, myReqRes] = await Promise.all([
-    supabase.from('season_weeks').select('*').order('week_number'),
+  const isEvents = league.scoring_model === 'events';
+
+  const [weeksRes, windowRes, ownedRes, logRes, orderRes, myReqRes] = await Promise.all([
+    isEvents ? Promise.resolve({ data: [] }) : supabase.from('season_weeks').select('*').order('week_number'),
+    isEvents ? supabase.rpc('get_events_window_info', { p_league_id: league.id }) : Promise.resolve({ data: null }),
     supabase.from('stables').select('horse_id, user_id').eq('league_id', league.id),
     supabase.from('transfers').select('*, profiles(username, display_name)').eq('league_id', league.id).order('transferred_at', { ascending: false }).limit(30),
     supabase.from('league_waiver_order').select('*, profiles(username, display_name)').eq('league_id', league.id).order('position'),
@@ -36,14 +39,26 @@ export async function loadTransferContext(syncSelection = true) {
   // keep whatever we last had rather than falsely showing "Season closed"
   // or an empty stable/log for this refresh.
   [
-    ['season_weeks', weeksRes], ['stables', ownedRes], ['transfers', logRes],
+    ['season_weeks', weeksRes], ['events window info', windowRes], ['stables', ownedRes], ['transfers', logRes],
     ['league_waiver_order', orderRes], ['waiver_requests', myReqRes],
   ].forEach(([name, res]) => { if (res.error) console.error(`Could not load ${name} for transfer context`, res.error); });
 
-  const nowMs = Date.now();
-  if (!weeksRes.error) seasonWeeks = weeksRes.data || [];
-  currentWeek = seasonWeeks.find((w) => new Date(w.opens_at).getTime() <= nowMs && nowMs < new Date(w.closes_at).getTime()) || null;
-  nextWeek = currentWeek ? null : seasonWeeks.find((w) => new Date(w.opens_at).getTime() > nowMs) || null;
+  if (isEvents) {
+    const w = Array.isArray(windowRes.data) ? windowRes.data[0] : windowRes.data;
+    seasonWeeks = [];
+    if (w?.is_open) {
+      currentWeek = { week_number: w.week_number, label: eventsWeekLabel(w.week_number), opens_at: w.opens_at, closes_at: w.closes_at };
+      nextWeek = null;
+    } else {
+      currentWeek = null;
+      nextWeek = w ? { week_number: null, label: 'Next window', opens_at: w.next_opens_at } : null;
+    }
+  } else {
+    const nowMs = Date.now();
+    if (!weeksRes.error) seasonWeeks = weeksRes.data || [];
+    currentWeek = seasonWeeks.find((w) => new Date(w.opens_at).getTime() <= nowMs && nowMs < new Date(w.closes_at).getTime()) || null;
+    nextWeek = currentWeek ? null : seasonWeeks.find((w) => new Date(w.opens_at).getTime() > nowMs) || null;
+  }
 
   if (!ownedRes.error) {
     leagueOwnedHorseIds = new Set((ownedRes.data || []).filter((s) => s.user_id !== state.session.user.id).map((s) => s.horse_id));
@@ -143,6 +158,14 @@ function fmtMelb(iso) {
   return new Date(iso).toLocaleString('en-AU', { timeZone: 'Australia/Melbourne', weekday: 'short', hour: 'numeric', minute: '2-digit', day: 'numeric', month: 'short' });
 }
 
+// events_week_number() (see 0037_events_transfer_window.sql) is just
+// "weeks since 2000-01-03, a Monday" — reversing it here needs no
+// timezone awareness at all, only that same fixed calendar arithmetic.
+function eventsWeekLabel(weekNumber) {
+  const monday = new Date(Date.UTC(2000, 0, 3) + weekNumber * 7 * 86400000);
+  return 'Wk of ' + monday.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', timeZone: 'UTC' });
+}
+
 export function renderTransferPage() {
   const league = getActiveLeague();
   const weekPill = document.getElementById('currentWeekPill');
@@ -159,6 +182,13 @@ export function renderTransferPage() {
 
   const stableComplete = state.stable.length >= 10;
   const canEdit = canEditNow();
+
+  const heroSub = document.getElementById('transferHeroSub');
+  if (heroSub) {
+    heroSub.innerHTML = league.scoring_model === 'events'
+      ? 'Swap one <strong style="color:#FFD6EC;">horse</strong> per week via waiver order · Windows run Monday 10am AEDT to Friday 8pm AEDT, effective the following Saturday · Pick up to 3 backups — no $ value on transfers, the cap only applies during the draft'
+      : 'Swap one <strong style="color:#FFD6EC;">horse</strong> per week via waiver order · Windows run Monday 10am AEDT to Saturday 8:30am AEDT · Pick up to 3 backups — no $ value on transfers, the cap only applies during the draft';
+  }
 
   if (weekPill) weekPill.textContent = currentWeek ? currentWeek.label : nextWeek ? nextWeek.label : 'Season closed';
   if (deadlineDisplay) {
@@ -197,7 +227,10 @@ function renderOutcomeBanner() {
     el.style.display = 'none';
     return;
   }
-  const weekLabel = seasonWeeks.find((w) => w.week_number === lastOutcome.week_number)?.label || `Week ${lastOutcome.week_number}`;
+  const league = getActiveLeague();
+  const weekLabel = league?.scoring_model === 'events'
+    ? eventsWeekLabel(lastOutcome.week_number)
+    : seasonWeeks.find((w) => w.week_number === lastOutcome.week_number)?.label || `Week ${lastOutcome.week_number}`;
   const outHorse = state.horsesById.get(lastOutcome.horse_out_id);
   el.style.display = 'flex';
   if (lastOutcome.status === 'fulfilled') {
@@ -361,9 +394,10 @@ function renderTransferLog() {
     list.innerHTML = `<div class="transfer-empty" style="padding:20px"><div class="transfer-empty-icon">📋</div>No transfers made yet this season</div>`;
     return;
   }
+  const league = getActiveLeague();
   list.innerHTML = transferLog.map((t) => `
     <div class="log-row">
-      <span class="log-week">Week ${t.week_number}</span>
+      <span class="log-week">${league?.scoring_model === 'events' ? eventsWeekLabel(t.week_number) : 'Week ' + t.week_number}</span>
       <span>${escapeHtml(t.profiles?.display_name || t.profiles?.username)}</span>
       <span class="log-out">${escapeHtml(state.horsesById.get(t.horse_out_id)?.name || '')}</span>
       <span class="log-arrow">→</span>

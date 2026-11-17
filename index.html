@@ -254,7 +254,7 @@
         <div class="transfer-hero-icon">🔄</div>
         <div>
           <div class="transfer-hero-title">Stable Transfer</div>
-          <div class="transfer-hero-sub">Swap one <strong style="color:#FFD6EC;">horse</strong> per week via waiver order · Windows run Monday 10am AEDT to Saturday 8:30am AEDT · Pick up to 3 backups — no $ value on transfers, the cap only applies during the draft</div>
+          <div class="transfer-hero-sub" id="transferHeroSub">Swap one <strong style="color:#FFD6EC;">horse</strong> per week via waiver order · Windows run Monday 10am AEDT to Saturday 8:30am AEDT · Pick up to 3 backups — no $ value on transfers, the cap only applies during the draft</div>
         </div>
         <div class="transfer-hero-right">
           <div class="transfer-allowance" id="transferAllowanceDisplay">1</div>
@@ -434,6 +434,22 @@
         <div class="admin-card-header">⚠️ Reset Imported Data</div>
         <div class="admin-card-sub">Clears every horse, this-week race, earnings total, and futures market added via import — useful for testing.</div>
         <span class="admin-reset-link" onclick="resetImportedData()">↺ Clear all imported data</span>
+      </div>
+
+      <div class="admin-card">
+        <div class="admin-card-header">🇳🇿 League Scoring Model</div>
+        <div class="admin-card-sub">Flip a league onto the NZ date-based model (dated prizemoney events summed over each horse's ownership period, no baseline/banking) with its own game window — or back to the AU model. Existing AU leagues keep working exactly as before unless you change them here. Enter the league's join code.</div>
+        <div class="admin-file-row">
+          <input type="text" id="nzLeagueCodeInput" class="join-input" placeholder="League code, e.g. AB12CD" style="max-width:200px;text-transform:uppercase;" />
+          <select id="nzScoringModelSelect" class="join-input" style="max-width:140px;">
+            <option value="events">Events (NZ)</option>
+            <option value="legacy">Legacy (AU)</option>
+          </select>
+          <input type="date" id="nzWindowStartInput" class="join-input" style="max-width:160px;" title="Window start" />
+          <input type="date" id="nzWindowEndInput" class="join-input" style="max-width:160px;" title="Window end" />
+          <span class="admin-reset-link" onclick="setLeagueScoringModel()">Apply</span>
+        </div>
+        <div id="nzLeagueResult"></div>
       </div>
 
       <div class="admin-card">
