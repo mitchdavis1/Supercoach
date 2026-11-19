@@ -405,6 +405,24 @@
       </div>
 
       <div class="admin-card">
+        <div class="admin-card-header">🇳🇿 Prizemoney Events Import (NZ)</div>
+        <div class="admin-card-sub">For an events-model league: one row per horse per race, not a running total. Columns: a date column (anything containing "date"), <code>venue</code>, a race number column (e.g. <code>race_no</code>), <code>horse</code>, and a column containing "stake". Safe to re-import an overlapping date range or an amended result — it upserts per race, never replaces a horse's whole history. A horse name not already in the pool is added automatically, never silently dropped.</div>
+        <div class="admin-file-row">
+          <input type="file" id="prizemoneyEventsFileInput" class="admin-file-input" accept=".xlsx,.xls,.csv" />
+          <button class="admin-import-btn" onclick="handlePrizemoneyEventsFile()">Import Prizemoney Events</button>
+        </div>
+        <div id="prizemoneyEventsImportResult"></div>
+
+        <div class="admin-card-sub" style="margin-top:16px;"><strong>Clear events by date range</strong> — e.g. to wipe a bad scrape before re-importing it.</div>
+        <div class="admin-file-row">
+          <input type="date" id="clearEventsFromInput" class="join-input" style="max-width:160px;" title="From date" />
+          <input type="date" id="clearEventsToInput" class="join-input" style="max-width:160px;" title="To date" />
+          <span class="admin-reset-link" onclick="clearPrizemoneyEventsRange()">↺ Clear events in range</span>
+        </div>
+        <div id="clearEventsResult"></div>
+      </div>
+
+      <div class="admin-card">
         <div class="admin-card-header">🔮 Futures Markets Import</div>
         <div class="admin-card-sub">Upload odds for horses in future-race markets (e.g. Melbourne Cup, Caulfield Cup) — a horse column, a race/market column, and an odds column. A horse can appear in more than one market. This <strong>replaces</strong> the whole list each time, and only matches horses already in your pool — names that don't match anything are reported below so you can check for typos. Shown on the draft room's bidding lot and on My Stable, wherever a horse actually has a market.</div>
         <div class="admin-file-row">

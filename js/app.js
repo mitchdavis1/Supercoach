@@ -6,7 +6,7 @@ import { loadStable, renderMyStablePage } from './stable.js';
 import { selectTransferOut, selectChoice, filterReplacements, submitWaiverRequest, loadTransferContext, renderTransferPage, startTransferPolling, stopTransferPolling } from './transfers.js';
 import { loadPrizemoney, loadFuturesOdds, renderLeaderboard, setLbRound } from './scoring.js';
 import { renderInPlay, switchLeagueTab } from './inplay.js';
-import { handleHorsePoolFile, handleAddSingleHorse, handleAcceptancesFile, handleResultsFile, handleStarredHorsesFile, handleFuturesOddsFile, resetImportedData, resetPrizemoneyTracking, resetLeagueDraft, setLeagueScoringModel, renderAdminStats, filterHorseCurationList, toggleHorseStar, forceConfirmEmail, sendPasswordReset } from './admin-import.js';
+import { handleHorsePoolFile, handleAddSingleHorse, handleAcceptancesFile, handleResultsFile, handlePrizemoneyEventsFile, clearPrizemoneyEventsRange, handleStarredHorsesFile, handleFuturesOddsFile, resetImportedData, resetPrizemoneyTracking, resetLeagueDraft, setLeagueScoringModel, renderAdminStats, filterHorseCurationList, toggleHorseStar, forceConfirmEmail, sendPasswordReset } from './admin-import.js';
 
 const PAGES = ['myteam', 'draft', 'transfer', 'leaderboard', 'rules', 'joinleague', 'inplay', 'dataimport'];
 let activePage = 'draft';
@@ -43,6 +43,8 @@ window.handleFuturesOddsFile = handleFuturesOddsFile;
 window.resetImportedData = resetImportedData;
 window.resetLeagueDraft = resetLeagueDraft;
 window.setLeagueScoringModel = setLeagueScoringModel;
+window.handlePrizemoneyEventsFile = handlePrizemoneyEventsFile;
+window.clearPrizemoneyEventsRange = clearPrizemoneyEventsRange;
 window.resetPrizemoneyTracking = resetPrizemoneyTracking;
 window.filterHorseCurationList = filterHorseCurationList;
 window.forceConfirmEmail = forceConfirmEmail;

@@ -165,6 +165,69 @@ export async function handleResultsFile() {
   }
 }
 
+export async function handlePrizemoneyEventsFile() {
+  const input = document.getElementById('prizemoneyEventsFileInput');
+  const file = input?.files?.[0];
+  if (!file) return;
+
+  try {
+    const rows = await readWorkbookFile(file);
+    const headerIdx = findHeaderRow(rows);
+    if (headerIdx === -1) throw 'Could not find a header row containing a "horse" column.';
+    const header = rows[headerIdx];
+    const horseCol = colIndex(header, /horse/i);
+    const dateCol = colIndex(header, /date/i);
+    const venueCol = colIndex(header, /venue/i);
+    const raceNoCol = colIndex(header, /race.?(no|num|#)/i);
+    const stakeCol = colIndex(header, /stake/i);
+    if (dateCol === -1) throw "Could not find a race date column — name it something containing 'date'.";
+    if (venueCol === -1) throw "Could not find a venue column — name it 'venue'.";
+    if (raceNoCol === -1) throw "Could not find a race number column — name it something like 'race_no'.";
+    if (stakeCol === -1) throw "Could not find a stake column — name it something containing 'stake'.";
+
+    const dataRows = rows.slice(headerIdx + 1).filter((r) => r && r[horseCol] !== '' && r[horseCol] != null);
+    const payload = dataRows.map((r) => ({
+      horse: String(r[horseCol]).trim(),
+      race_date: fmtImportDate(r[dateCol]),
+      venue: String(r[venueCol] ?? '').trim(),
+      race_no: String(r[raceNoCol] ?? ''),
+      stake: String(r[stakeCol] ?? ''),
+    }));
+
+    const { data, error } = await supabase.rpc('import_prizemoney_events', { p_rows: payload });
+    if (error) throw error.message;
+
+    const createdHtml = data.auto_created_horses.length
+      ? `<div class="admin-new-list">${data.auto_created_horses.length} new horse(s) added to the pool from this file: ${data.auto_created_horses.map(escapeHtml).join(', ')}</div>`
+      : '';
+    renderResult(
+      'prizemoneyEventsImportResult',
+      `<span class="admin-result-stat">${data.rows_inserted} new events</span><span class="admin-result-stat">${data.rows_updated} updated</span> out of ${dataRows.length} rows — never silently dropped, rows missing a date/venue/race number/horse are the only ones skipped.${createdHtml}`,
+      false
+    );
+    await refreshAfterImport();
+  } catch (err) {
+    renderResult('prizemoneyEventsImportResult', String(err), true);
+  }
+}
+
+export async function clearPrizemoneyEventsRange() {
+  const fromInput = document.getElementById('clearEventsFromInput');
+  const toInput = document.getElementById('clearEventsToInput');
+  const from = fromInput?.value;
+  const to = toInput?.value;
+  if (!from || !to) return;
+  if (!confirm(`Delete every prizemoney event between ${from} and ${to}? This cannot be undone.`)) return;
+
+  try {
+    const { data, error } = await supabase.rpc('clear_prizemoney_events', { p_from: from, p_to: to });
+    if (error) throw error.message;
+    renderResult('clearEventsResult', `<span class="admin-result-stat">${data} events deleted</span> between ${from} and ${to}.`, false);
+  } catch (err) {
+    renderResult('clearEventsResult', String(err), true);
+  }
+}
+
 export async function handleStarredHorsesFile() {
   const input = document.getElementById('starredHorsesFileInput');
   const file = input?.files?.[0];
