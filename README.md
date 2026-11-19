@@ -38,11 +38,13 @@ js/
   draft.js                Draft room: nominate/bid, realtime, server clock
   stable.js                My Stable: current roster + earnings
   transfers.js              Weekly transfer flow
-  scoring.js                 Leaderboard (100% prizemoney earned since acquiring each horse)
-  admin-import.js             Horse pool / acceptances / prizemoney import
+  scoring.js                 Leaderboard — branches per league on scoring_model (see below)
+  eventsScoring.js            Pure date/sum logic for the NZ 'events' model, unit-tested
+  admin-import.js             Horse pool / acceptances / prizemoney / prizemoney-events import
   inplay.js                    My League view (acceptances + all teams' rosters)
   app.js                        Entry point: page router, wires everything
 supabase/migrations/    Ordered SQL migrations — schema, RLS, RPCs
+test/                    Node test suite (`npm test`) — currently just eventsScoring.js
 legacy/                  The original prototype + migration brief, for reference
 ```
 
@@ -140,6 +142,27 @@ It's a static site — no build step. Any of these work:
 
 ## Design notes / things a future pass should look at
 
+- **Two scoring models now coexist, per league (`leagues.scoring_model`).**
+  `'legacy'` (the default, every AU league) is the original
+  baseline/banking model described below, completely untouched. `'events'`
+  (opt-in, for the NZ season) scores from dated `prizemoney_events` rows
+  summed over each horse's `ownership_periods` row — no baseline, no
+  banked_earnings, since a period's own start/end dates already give an
+  exact answer for "what did this manager earn while holding this horse."
+  An admin flips a league onto the events model and sets its game window
+  from the Data Import page's "League Scoring Model" card
+  (`admin_set_league_scoring_model()`), typically right after creating the
+  league and before anyone drafts. The events model's transfer window is
+  computed (Monday 10am–Friday 8pm, effective the following Saturday —
+  see `events_week_start()`/`events_window_bounds()` in
+  `0037_events_transfer_window.sql`) rather than hand-curated like
+  `season_weeks`, specifically so it needs no weekly upkeep. The NZ
+  scraper that feeds `prizemoney_events` is a separate script that lives
+  outside this repo on Mitch's machine, and hasn't been written yet —
+  `loveracing.nz` isn't reachable from a dev sandbox to investigate its
+  page structure (specifically: does a results page show each placed
+  runner's own stake, or only the race's total purse?), so that's the
+  next open question before the scraper itself can be built.
 - **Weekly scoring isn't implemented** — this matches the prototype
   exactly (`setLbRound()` was a no-op stub there too). The leaderboard is
   always full-season: banked_earnings plus, for each horse currently held,
