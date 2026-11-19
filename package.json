@@ -1,0 +1,9 @@
+{
+  "name": "superstable",
+  "private": true,
+  "type": "module",
+  "description": "Static site, no build step — this file exists only so Node (tests, tooling) treats .js files as ES modules, matching how the browser already loads them.",
+  "scripts": {
+    "test": "node --test"
+  }
+}

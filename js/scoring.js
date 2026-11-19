@@ -1,6 +1,7 @@
 import { supabase } from './supabaseClient.js';
 import { state, getActiveLeague, fmtMoney, earnedForStableRow } from './state.js';
 import { loadLeagueMembers } from './league.js';
+import { attachEarnedToPeriods } from './eventsScoring.js';
 
 // Scoring: a horse scores 100% of what it's earned since joining this
 // stable (see earnedForStableRow in state.js — not its raw cumulative
@@ -87,22 +88,11 @@ export async function loadEventsOwnershipPeriods(leagueId) {
     .maybeSingle();
   const windowStart = windowRow?.window_start ?? null;
   const windowEnd = windowRow?.window_end ?? null;
-  const inWindow = (d) => (!windowStart || d >= windowStart) && (!windowEnd || d <= windowEnd);
 
   const horseIds = [...new Set((periods || []).map((p) => p.horse_id))];
   const events = await fetchPrizemoneyEventsForHorses(horseIds);
-  const eventsByHorse = new Map();
-  events.forEach((e) => {
-    if (!eventsByHorse.has(e.horse_id)) eventsByHorse.set(e.horse_id, []);
-    eventsByHorse.get(e.horse_id).push(e);
-  });
 
-  return (periods || []).map((p) => {
-    const earned = (eventsByHorse.get(p.horse_id) || [])
-      .filter((e) => e.race_date >= p.start_date && (!p.end_date || e.race_date < p.end_date) && inWindow(e.race_date))
-      .reduce((total, e) => total + Number(e.stake), 0);
-    return { ...p, earned };
-  });
+  return attachEarnedToPeriods(periods || [], events, windowStart, windowEnd);
 }
 
 // Paginated the same way as loadPrizemoney() (Supabase caps a single
